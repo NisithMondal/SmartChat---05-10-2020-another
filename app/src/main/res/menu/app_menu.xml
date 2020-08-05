@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/find_friends"
+        android:title="Find Friends"/>
+
+    <item
+        android:id="@+id/Create_group"
+        android:title="Create Group"/>
+
+    <item
+        android:id="@+id/user_profile_setting"
+        android:title="User Profile Setting"/>
+
+    <item
+        android:id="@+id/privacy_policy"
+        android:title="Privacy Policy"/>
+
+    <item
+        android:id="@+id/log_out"
+        android:title="Logout"/>
+
+
+</menu>
