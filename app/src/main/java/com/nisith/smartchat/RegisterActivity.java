@@ -5,6 +5,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import de.hdodenhof.circleimageview.CircleImageView;
+import id.zelory.compressor.Compressor;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -32,7 +33,6 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
-import com.iceteck.silicompressorr.SiliCompressor;
 import com.nisith.smartchat.Model.UserProfile;
 import com.squareup.picasso.Picasso;
 import com.theartofdev.edmodo.cropper.CropImage;
@@ -56,7 +56,8 @@ public class RegisterActivity extends AppCompatActivity {
     private FirebaseAuth firebaseAuth;
     private StorageReference rootStorageReference;
     private DatabaseReference rootDatabaseReference;
-    private Uri profileImageUri;
+//    private Uri profileImageUri;
+    private byte[] profileImageByteArray;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,7 +75,7 @@ public class RegisterActivity extends AppCompatActivity {
         firebaseAuth = FirebaseAuth.getInstance();
 
         rootDatabaseReference = FirebaseDatabase.getInstance().getReference().child("users");
-        rootStorageReference = FirebaseStorage.getInstance().getReference().child("user_profile_picture");
+        rootStorageReference = FirebaseStorage.getInstance().getReference().child("all_user_picture");
     }
 
     private void initializeViews(){
@@ -127,38 +128,41 @@ public class RegisterActivity extends AppCompatActivity {
             CropImage.ActivityResult result = CropImage.getActivityResult(data);
             if (resultCode == RESULT_OK && result != null) {
                 //Crop image uri
-                profileImageUri = result.getUri();
-                Picasso.get().load(profileImageUri).into(profileImageView);
-//                File thumbnailFile = new File(Objects.requireNonNull(profileImageUri.getPath()));
-////                String filePath = SiliCompressor.with(getApplicationContext()).compress(profileImageUri.getPath(),null);
-//                try {
-//                    Bitmap thumbBitmap = SiliCompressor.with(getApplicationContext()).getCompressBitmap(profileImageUri.getPath());
-//                    Log.d("ABCD","thumbBitmap = "+thumbBitmap);
-//                    Uri uri = getImageUri(thumbBitmap, Bitmap.CompressFormat.PNG,70);
-//
-//                    Log.d("ABCD","uri = "+uri);
-//                } catch (IOException e) {
-//                    Log.d("ABCD","error = "+e);
-//                    e.printStackTrace();
-//                }
-
+                Uri profileImageUri = result.getUri();
+                Bitmap profileImageBitmap = getCompressImageBitmap(profileImageUri);
+                if (profileImageBitmap != null) {
+                    Picasso.get().load(profileImageUri).placeholder(R.drawable.default_user_icon).into(profileImageView);
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    profileImageBitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+                     profileImageByteArray = baos.toByteArray();
+                }
             } else if (resultCode == CropImage.CROP_IMAGE_ACTIVITY_RESULT_ERROR_CODE) {
                 Exception error = result.getError();
-                Toast.makeText(this, "Not Selected", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Error", Toast.LENGTH_SHORT).show();
             }
         }
 
 
     }
 
-
-    public Uri getImageUri(Bitmap src, Bitmap.CompressFormat format, int quality) {
-        ByteArrayOutputStream os = new ByteArrayOutputStream();
-        src.compress(format, quality, os);
-
-        String path = MediaStore.Images.Media.insertImage(getContentResolver(), src, "title", null);
-        return Uri.parse(path);
+    private Bitmap getCompressImageBitmap(Uri imageUri){
+        //this method compress the image and return as a bitmap format
+        Bitmap imageBitmap = null;
+        File imageFile = new File(Objects.requireNonNull(imageUri.getPath()));
+        try {
+            imageBitmap = new Compressor(this)
+                    .setMaxWidth(260)
+                    .setMaxHeight(260)
+                    .setQuality(75)
+                    .compressToBitmap(imageFile);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return imageBitmap;
     }
+
+
+
 
     private void createAccountWithEmailAndPassword(){
         final String userName = userNameEditText.getText().toString().trim();
@@ -193,7 +197,7 @@ public class RegisterActivity extends AppCompatActivity {
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()){
                             //account created successfully
-                            UserProfile currentUserProfile = new UserProfile(userName,Constant.USER_DEFAULT_STATUS,"default","default");
+                            UserProfile currentUserProfile = new UserProfile(userName,Constant.USER_DEFAULT_STATUS,"default");
                             rootDatabaseReference.child(firebaseAuth.getCurrentUser().getUid()).setValue(currentUserProfile)
                                     .addOnCompleteListener(new OnCompleteListener<Void>() {
                                         @Override
@@ -216,11 +220,11 @@ public class RegisterActivity extends AppCompatActivity {
 
 
     private void uploadUserProfileImages(){
-        if (profileImageUri != null){
+        if (profileImageByteArray != null){
             //Means user select an image from gallery
             //Upload user profile image to Firebase Storage
-            rootStorageReference.child("user_profile_image").child(firebaseAuth.getCurrentUser().getUid()+".jpg")
-                    .putFile(profileImageUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+            rootStorageReference.child("users_profile_image").child(firebaseAuth.getCurrentUser().getUid()+".jpg")
+                    .putBytes(profileImageByteArray).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                 @Override
                 public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                     Task<Uri> task = taskSnapshot.getStorage().getDownloadUrl();

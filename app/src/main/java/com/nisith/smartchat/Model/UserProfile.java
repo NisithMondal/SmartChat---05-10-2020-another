@@ -4,17 +4,16 @@ public class UserProfile {
     private String userName;
     private String userStatus;
     private String profileImage;
-    private String profileImageThumbnail;
+
 
 
     public UserProfile(){
     }
 
-    public UserProfile(String userName, String userStatus, String profileImage, String profileImageThumbnail) {
+    public UserProfile(String userName, String userStatus, String profileImage) {
         this.userName = userName;
         this.userStatus = userStatus;
         this.profileImage = profileImage;
-        this.profileImageThumbnail = profileImageThumbnail;
 
     }
 
@@ -24,10 +23,6 @@ public class UserProfile {
 
     public String getProfileImage() {
         return profileImage;
-    }
-
-    public String getProfileImageThumbnail() {
-        return profileImageThumbnail;
     }
 
     public String getUserStatus() {

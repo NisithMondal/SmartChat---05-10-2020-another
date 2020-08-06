@@ -46,7 +46,6 @@ public class LoginActivity extends AppCompatActivity {
         initializeViews();
         setSupportActionBar(appToolbar);
         Objects.requireNonNull(getSupportActionBar()).setTitle("User Login");
-//        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         forgotPasswordTextView.setOnClickListener(new MyClickListener());
         signUpTextView.setOnClickListener(new MyClickListener());
         loginButton.setOnClickListener(new MyClickListener());

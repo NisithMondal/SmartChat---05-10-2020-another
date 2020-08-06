@@ -12,6 +12,27 @@
         layout="@layout/app_toolbar"
         />
 
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/tab_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/app_toolbar"
+        android:background="@color/colorPrimary"
+        app:tabMode="fixed"
+        app:tabBackground="@color/colorPrimary"
+        app:tabGravity="fill"
+        app:tabTextColor="#D8D9DA"
+        app:tabSelectedTextColor="#ffffff"
+        app:tabIndicatorHeight="3dp"
+        />
+
+    <androidx.viewpager.widget.ViewPager
+        android:id="@+id/view_pager"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/tab_layout"
+        />
+
 
 
 </RelativeLayout>
