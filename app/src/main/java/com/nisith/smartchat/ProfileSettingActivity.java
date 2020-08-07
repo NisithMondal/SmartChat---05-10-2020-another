@@ -23,15 +23,16 @@ import com.google.firebase.database.ValueEventListener;
 import com.nisith.smartchat.Model.UserProfile;
 import com.squareup.picasso.Picasso;
 
-import java.util.Objects;
-
 public class ProfileSettingActivity extends AppCompatActivity {
 
     private Toolbar appToolbar;
+    private TextView toolbarTextView;
     private CircleImageView profileImageView;
     private TextView userNameTextView, userStatusTextView;
     private ProgressBar progressBar;
     private Button editProfileButton;
+    private String userName;
+    private String profileImageUrl;
     //Firebase
     private DatabaseReference rootDatabaseRef;
     private ValueEventListener valueEventListener;
@@ -43,8 +44,15 @@ public class ProfileSettingActivity extends AppCompatActivity {
         setContentView(R.layout.activity_profile_setting);
         initializeViews();
         setSupportActionBar(appToolbar);
-        Objects.requireNonNull(getSupportActionBar()).setTitle("User profile");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        setTitle("");
+        toolbarTextView.setText("Profile Setting");
+        appToolbar.setNavigationIcon(R.drawable.ic_back_arrow_icon);
+        appToolbar.setNavigationOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                finish();
+            }
+        });
         progressBar.setVisibility(View.GONE);
         editProfileButton.setVisibility(View.INVISIBLE);
         //Firebase
@@ -52,6 +60,7 @@ public class ProfileSettingActivity extends AppCompatActivity {
         if (currentUser != null) {
            String currentUserId = currentUser.getUid();
             rootDatabaseRef = FirebaseDatabase.getInstance().getReference().child("users").child(currentUserId);
+//            rootDatabaseRef.keepSynced(true);
             showUserProfile();
         }
         editProfileButton.setOnClickListener(new View.OnClickListener() {
@@ -60,9 +69,16 @@ public class ProfileSettingActivity extends AppCompatActivity {
                 startActivity(new Intent(ProfileSettingActivity.this, EditProfileActivity.class));
             }
         });
+        profileImageView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                displayProfileImage();
+            }
+        });
     }
     private void initializeViews(){
         appToolbar = findViewById(R.id.app_toolbar);
+        toolbarTextView = findViewById(R.id.toolbar_text_view);
         profileImageView = findViewById(R.id.profile_image_view);
         userNameTextView = findViewById(R.id.user_name_text_view);
         userStatusTextView = findViewById(R.id.user_status_text_view);
@@ -73,6 +89,7 @@ public class ProfileSettingActivity extends AppCompatActivity {
     private void showUserProfile(){
         progressBar.setVisibility(View.VISIBLE);
         editProfileButton.setVisibility(View.INVISIBLE);
+        profileImageView.setEnabled(false);
          valueEventListener = rootDatabaseRef.addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -80,12 +97,15 @@ public class ProfileSettingActivity extends AppCompatActivity {
                     UserProfile userProfile = snapshot.getValue(UserProfile.class);
                     if (userProfile != null){
                         editProfileButton.setVisibility(View.VISIBLE);
-                        userNameTextView.setText(userProfile.getUserName());
+                        profileImageView.setEnabled(true);
+                        userName = userProfile.getUserName();
+                        userNameTextView.setText(userName);
+                        profileImageUrl = userProfile.getProfileImage();
                         userStatusTextView.setText("Status: " + userProfile.getUserStatus());
-                        String imageUrl = userProfile.getProfileImage();
-                        if (! imageUrl.equalsIgnoreCase("default")){
+
+                        if (! profileImageUrl.equalsIgnoreCase("default")){
                             //means profileImage value is not default.
-                            Picasso.get().load(imageUrl).placeholder(R.drawable.default_user_icon).into(profileImageView);
+                            Picasso.get().load(profileImageUrl).placeholder(R.drawable.default_user_icon).into(profileImageView);
                         }
                     }
                 }
@@ -106,4 +126,12 @@ public class ProfileSettingActivity extends AppCompatActivity {
             rootDatabaseRef.removeEventListener(valueEventListener);
         }
     }
+
+    private void displayProfileImage(){
+        Intent intent = new Intent(ProfileSettingActivity.this,ImageDisplayActivity.class);
+        intent.putExtra(Constant.USER_NAME,userName);
+        intent.putExtra(Constant.PROFILE_IMAGE_URL,profileImageUrl);
+        startActivity(intent);
+    }
+
 }

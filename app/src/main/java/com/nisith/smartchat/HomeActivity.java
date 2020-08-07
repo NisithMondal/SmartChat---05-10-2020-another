@@ -16,6 +16,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.material.tabs.TabLayout;
@@ -31,6 +32,7 @@ import java.util.Objects;
 public class HomeActivity extends AppCompatActivity {
 
     private Toolbar appToolbar;
+    private TextView toolbarTextView;
     private TabLayout tabLayout;
     private ViewPager viewPager;
     //Firebase
@@ -45,7 +47,8 @@ public class HomeActivity extends AppCompatActivity {
         setContentView(R.layout.activity_home);
         initializeViews();
         setSupportActionBar(appToolbar);
-        Objects.requireNonNull(getSupportActionBar()).setTitle("Smart Chat");
+        setTitle("");
+        toolbarTextView.setText("Smart Chat");
         setUpTabLayoutWithViewPager();
         //Firebase
         firebaseAuth = FirebaseAuth.getInstance();
@@ -56,6 +59,7 @@ public class HomeActivity extends AppCompatActivity {
 
     private void initializeViews(){
         appToolbar = findViewById(R.id.app_toolbar);
+        toolbarTextView = findViewById(R.id.toolbar_text_view);
         tabLayout = findViewById(R.id.tab_layout);
         viewPager = findViewById(R.id.view_pager);
     }
@@ -91,14 +95,14 @@ public class HomeActivity extends AppCompatActivity {
         super.onOptionsItemSelected(item);
         switch (item.getItemId()){
             case R.id.find_friends:
-                Toast.makeText(this, "Find Friends", Toast.LENGTH_SHORT).show();
+                startActivity(new Intent(HomeActivity.this,FindFriendsActivity.class));
                 break;
 
             case R.id.Create_group:
                 Toast.makeText(this, "Create Group", Toast.LENGTH_SHORT).show();
                 break;
 
-            case R.id.user_profile_setting:
+            case R.id.profile_setting:
                 startActivity(new Intent(HomeActivity.this,ProfileSettingActivity.class));
                 break;
 

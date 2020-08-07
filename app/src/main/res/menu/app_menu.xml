@@ -19,8 +19,8 @@
         android:title="Create Group"/>
 
     <item
-        android:id="@+id/user_profile_setting"
-        android:title="User Profile Setting"/>
+        android:id="@+id/profile_setting"
+        android:title="Profile Setting"/>
 
     <item
         android:id="@+id/privacy_policy"

@@ -8,4 +8,15 @@
     android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
     app:popupTheme="@style/Theme.AppCompat.Light">
 
+    <TextView
+        android:id="@+id/toolbar_text_view"
+        android:layout_width="270dp"
+        android:layout_height="wrap_content"
+        android:textColor="@android:color/white"
+        android:textSize="18sp"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:textStyle="bold"
+        />
+
 </androidx.appcompat.widget.Toolbar>

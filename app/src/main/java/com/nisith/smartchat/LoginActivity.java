@@ -32,6 +32,7 @@ import java.util.Objects;
 public class LoginActivity extends AppCompatActivity {
 
     private Toolbar appToolbar;
+    private TextView toolbarTextView;
     private ProgressBar progressBar;
     private EditText emailEditText, passwordEditText;
     private TextView forgotPasswordTextView, signUpTextView;
@@ -45,7 +46,8 @@ public class LoginActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login);
         initializeViews();
         setSupportActionBar(appToolbar);
-        Objects.requireNonNull(getSupportActionBar()).setTitle("User Login");
+        setTitle("");
+        toolbarTextView.setText("User Login");
         forgotPasswordTextView.setOnClickListener(new MyClickListener());
         signUpTextView.setOnClickListener(new MyClickListener());
         loginButton.setOnClickListener(new MyClickListener());
@@ -58,6 +60,7 @@ public class LoginActivity extends AppCompatActivity {
 
     private void initializeViews(){
         appToolbar = findViewById(R.id.app_toolbar);
+        toolbarTextView = findViewById(R.id.toolbar_text_view);
         progressBar = findViewById(R.id.progress_bar);
         emailEditText = findViewById(R.id.email_edit_text);
         passwordEditText = findViewById(R.id.password_edit_text);

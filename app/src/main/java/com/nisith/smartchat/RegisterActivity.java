@@ -47,6 +47,7 @@ import java.util.Objects;
 
 public class RegisterActivity extends AppCompatActivity {
     private Toolbar appToolbar;
+    private TextView toolbarTextView;
     private ProgressBar progressBar;
     private CircleImageView profileImageView;
     private EditText userNameEditText, emailEditText, passwordEditText;
@@ -65,8 +66,15 @@ public class RegisterActivity extends AppCompatActivity {
         setContentView(R.layout.activity_register);
         initializeViews();
         setSupportActionBar(appToolbar);
-        Objects.requireNonNull(getSupportActionBar()).setTitle("Create Account");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        setTitle("");
+        toolbarTextView.setText("Create Account");
+        appToolbar.setNavigationIcon(R.drawable.ic_back_arrow_icon);
+        appToolbar.setNavigationOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                finish();
+            }
+        });
         profileImageView.setOnClickListener(new MyClickListener());
         createAccountButton.setOnClickListener(new MyClickListener());
         haveAnAccountTextView.setOnClickListener(new MyClickListener());
@@ -80,6 +88,7 @@ public class RegisterActivity extends AppCompatActivity {
 
     private void initializeViews(){
         appToolbar = findViewById(R.id.app_toolbar);
+        toolbarTextView = findViewById(R.id.toolbar_text_view);
         progressBar = findViewById(R.id.progress_bar);
         profileImageView = findViewById(R.id.profile_image_view);
         userNameEditText = findViewById(R.id.user_name_edit_text);
@@ -212,6 +221,8 @@ public class RegisterActivity extends AppCompatActivity {
                                     });
 
                         }else {
+                            progressBar.setVisibility(View.GONE);
+                            createAccountButton.setEnabled(true);
                             Toast.makeText(RegisterActivity.this, Objects.requireNonNull(task.getException()).getMessage(), Toast.LENGTH_LONG).show();
                         }
                     }

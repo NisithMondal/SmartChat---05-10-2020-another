@@ -16,6 +16,7 @@ import java.util.Objects;
 public class RegisterOptionsActivity extends AppCompatActivity {
 
     private Toolbar appToolbar;
+    private TextView toolbarTextView;
     private ProgressBar progressBar;
     private Button createAccountWithEmailButton, googleSignInButton;
     private TextView haveAnAccountTextView;
@@ -26,8 +27,15 @@ public class RegisterOptionsActivity extends AppCompatActivity {
         setContentView(R.layout.activity_register_options);
         initializeViews();
         setSupportActionBar(appToolbar);
-        Objects.requireNonNull(getSupportActionBar()).setTitle("Sign Up Options");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        setTitle("");
+        toolbarTextView.setText("Sign Up Options");
+        appToolbar.setNavigationIcon(R.drawable.ic_back_arrow_icon);
+        appToolbar.setNavigationOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                finish();
+            }
+        });
         createAccountWithEmailButton.setOnClickListener(new MyClickListener());
         googleSignInButton.setOnClickListener(new MyClickListener());
         haveAnAccountTextView.setOnClickListener(new MyClickListener());
@@ -37,6 +45,7 @@ public class RegisterOptionsActivity extends AppCompatActivity {
 
     private void initializeViews(){
         appToolbar = findViewById(R.id.app_toolbar);
+        toolbarTextView = findViewById(R.id.toolbar_text_view);
         progressBar = findViewById(R.id.progress_bar);
         createAccountWithEmailButton = findViewById(R.id.create_account_with_email_button);
         googleSignInButton = findViewById(R.id.google_signIn_button);
