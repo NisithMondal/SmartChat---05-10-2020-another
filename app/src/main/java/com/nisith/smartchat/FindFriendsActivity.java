@@ -12,9 +12,11 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.Adapter;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.firebase.ui.database.paging.DatabasePagingOptions;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
@@ -24,6 +26,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.nisith.smartchat.Adapters.MyFindFriendsPaginationAdapter;
+import com.nisith.smartchat.Adapters.MyFirebaseRecyclerAdapter;
 import com.nisith.smartchat.Model.UserProfile;
 
 public class FindFriendsActivity extends AppCompatActivity implements MyFindFriendsPaginationAdapter.OnCardItemClickListener {
@@ -55,21 +58,20 @@ public class FindFriendsActivity extends AppCompatActivity implements MyFindFrie
         progressBar.setVisibility(View.GONE);
         //Firebase
         rootDatabaseRef = FirebaseDatabase.getInstance().getReference().child("users");
+        //To get Updated data from server
+        rootDatabaseRef.keepSynced(true);
         findFriendsFromDatabase();
-       valueEventListener = rootDatabaseRef.limitToFirst(1).addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-//                Log.d("ABCDE","Total Child = "+snapshot.getChildrenCount());
-                findFriendsPaginationAdapter.refresh();
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-
-            }
-        });
 
     }
+
+
+    private void initializeViews(){
+        appToolbar = findViewById(R.id.app_toolbar);
+        toolbarTextView = findViewById(R.id.toolbar_text_view);
+        recyclerView = findViewById(R.id.recycler_view);
+        progressBar = findViewById(R.id.progress_bar);
+    }
+
 
     @Override
     protected void onStart() {
@@ -87,7 +89,7 @@ public class FindFriendsActivity extends AppCompatActivity implements MyFindFrie
 
         }
         if(rootDatabaseRef != null){
-            rootDatabaseRef.removeEventListener(valueEventListener);
+            rootDatabaseRef.keepSynced(false);
         }
     }
 
@@ -95,16 +97,11 @@ public class FindFriendsActivity extends AppCompatActivity implements MyFindFrie
     protected void onDestroy() {
         super.onDestroy();
         if(rootDatabaseRef != null){
-            rootDatabaseRef.removeEventListener(valueEventListener);
+            //if any reason onStop() is not called
+            rootDatabaseRef.keepSynced(false);
         }
     }
 
-    private void initializeViews(){
-        appToolbar = findViewById(R.id.app_toolbar);
-        toolbarTextView = findViewById(R.id.toolbar_text_view);
-        recyclerView = findViewById(R.id.recycler_view);
-        progressBar = findViewById(R.id.progress_bar);
-    }
 
     private void findFriendsFromDatabase(){
         Query query = rootDatabaseRef;
@@ -117,6 +114,7 @@ public class FindFriendsActivity extends AppCompatActivity implements MyFindFrie
                 .setQuery(query,config,UserProfile.class)
                 .build();
         findFriendsPaginationAdapter = new MyFindFriendsPaginationAdapter(pagingOptions,this);
+
         recyclerView.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
         recyclerView.setHasFixedSize(true);
         recyclerView.setAdapter(findFriendsPaginationAdapter);

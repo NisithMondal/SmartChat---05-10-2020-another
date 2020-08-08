@@ -6,6 +6,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.firebase.ui.database.FirebaseRecyclerAdapter;
+import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.firebase.ui.database.paging.DatabasePagingOptions;
 import com.firebase.ui.database.paging.FirebaseRecyclerPagingAdapter;
 import com.firebase.ui.database.paging.LoadingState;
@@ -18,7 +20,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.RecyclerView;
 import de.hdodenhof.circleimageview.CircleImageView;
 
-public class MyFindFriendsPaginationAdapter extends FirebaseRecyclerPagingAdapter<UserProfile, MyFindFriendsPaginationAdapter.MyViewHolder> {
+public class MyFirebaseRecyclerAdapter extends FirebaseRecyclerAdapter<UserProfile, MyFirebaseRecyclerAdapter.MyViewHolder> {
+
+    public MyFirebaseRecyclerAdapter(@NonNull FirebaseRecyclerOptions<UserProfile> options) {
+        super(options);
+    }
 
     public interface OnCardItemClickListener{
         void onCardItemClick(String userProfileId);
@@ -26,10 +32,10 @@ public class MyFindFriendsPaginationAdapter extends FirebaseRecyclerPagingAdapte
 
     private OnCardItemClickListener cardItemClickListener;
 
-    public MyFindFriendsPaginationAdapter(@NonNull DatabasePagingOptions<UserProfile> options, AppCompatActivity appCompatActivity) {
-        super(options);
-        this.cardItemClickListener = (OnCardItemClickListener) appCompatActivity;
-    }
+//    public MyFirebaseRecyclerAdapter(@NonNull DatabasePagingOptions<UserProfile> options, AppCompatActivity appCompatActivity) {
+//        super(options);
+//        this.cardItemClickListener = (OnCardItemClickListener) appCompatActivity;
+//    }
 
     @NonNull
     @Override
@@ -44,18 +50,14 @@ public class MyFindFriendsPaginationAdapter extends FirebaseRecyclerPagingAdapte
         viewHolder.userStatusTextView.setText(userProfile.getUserStatus());
         String imageUrl = userProfile.getProfileImage();
         if (! imageUrl.equalsIgnoreCase("default")){
-            Picasso.get().load(imageUrl).placeholder(R.drawable.user_icon).into(viewHolder.profileImageView);
+            Picasso.get().load(imageUrl).placeholder(R.drawable.default_user_icon).into(viewHolder.profileImageView);
         }else {
-            Picasso.get().load(R.drawable.user_icon).into(viewHolder.profileImageView);
+            Picasso.get().load(R.drawable.default_user_icon).into(viewHolder.profileImageView);
         }
-        Log.d("ABCDE","getItemCount = "+getItemCount());
+//        Log.d("ABCDE","getItemCount = "+getItemCount());
 
     }
 
-    @Override
-    protected void onLoadingStateChanged(@NonNull LoadingState state) {
-
-    }
 
 
 

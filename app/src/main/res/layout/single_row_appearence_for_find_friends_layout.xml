@@ -12,7 +12,6 @@
             android:id="@+id/profile_image_view"
             android:layout_width="70dp"
             android:layout_height="70dp"
-            android:src="@drawable/default_user_icon"
             android:layout_centerVertical="true"
             android:layout_margin="15dp"
             />

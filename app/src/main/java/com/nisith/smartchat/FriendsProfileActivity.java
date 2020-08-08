@@ -6,9 +6,9 @@ import de.hdodenhof.circleimageview.CircleImageView;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.provider.ContactsContract;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -24,20 +24,21 @@ import com.squareup.picasso.Picasso;
      private CircleImageView profileImageView;
      private TextView userNameTextView, userStatusTextView;
      //Firebase
-     private DatabaseReference rootDatabaseRef;
+     private DatabaseReference databaseRef;
      private ValueEventListener valueEventListener;
+     private String friendUid;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_friends_profile);
         initializeViews();
-        Picasso.get().load(R.drawable.wallpaper3).into(backgroundImageView);
-        rootDatabaseRef = FirebaseDatabase.getInstance().getReference().child("users");
+        Picasso.get().load(R.drawable.wallpaper2).into(backgroundImageView);
         Intent intent = getIntent();
-        String friendUid = intent.getStringExtra(Constant.FRIEND_UID);
+        friendUid = intent.getStringExtra(Constant.FRIEND_UID);
         if (friendUid != null){
-            showFriendProfile(friendUid);
+            databaseRef = FirebaseDatabase.getInstance().getReference().child("users").child(friendUid);
+            showFriendProfile();
         }
 
     }
@@ -49,9 +50,8 @@ import com.squareup.picasso.Picasso;
         userStatusTextView = findViewById(R.id.user_status_text_view);
     }
 
-    private void showFriendProfile(final String friendUid){
-      valueEventListener = rootDatabaseRef.child(friendUid)
-                .addValueEventListener(new ValueEventListener() {
+    private void showFriendProfile(){
+      valueEventListener = databaseRef.addValueEventListener(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
                       UserProfile friendUserProfile = snapshot.getValue(UserProfile.class);
@@ -69,7 +69,7 @@ import com.squareup.picasso.Picasso;
 
                     @Override
                     public void onCancelled(@NonNull DatabaseError error) {
-
+                        Toast.makeText(FriendsProfileActivity.this, error.getMessage(), Toast.LENGTH_SHORT).show();
                     }
                 });
     }
@@ -77,8 +77,8 @@ import com.squareup.picasso.Picasso;
      @Override
      protected void onStop() {
          super.onStop();
-         if (rootDatabaseRef != null){
-             rootDatabaseRef.removeEventListener(valueEventListener);
+         if (databaseRef != null){
+             databaseRef.removeEventListener(valueEventListener);
          }
      }
  }

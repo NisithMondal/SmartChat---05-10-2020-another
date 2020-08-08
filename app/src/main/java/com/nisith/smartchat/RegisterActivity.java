@@ -57,7 +57,6 @@ public class RegisterActivity extends AppCompatActivity {
     private FirebaseAuth firebaseAuth;
     private StorageReference rootStorageReference;
     private DatabaseReference rootDatabaseReference;
-//    private Uri profileImageUri;
     private byte[] profileImageByteArray;
 
     @Override
@@ -150,8 +149,6 @@ public class RegisterActivity extends AppCompatActivity {
                 Toast.makeText(this, "Error", Toast.LENGTH_SHORT).show();
             }
         }
-
-
     }
 
     private Bitmap getCompressImageBitmap(Uri imageUri){
@@ -275,7 +272,6 @@ public class RegisterActivity extends AppCompatActivity {
             openHomeActivity();
             finishAffinity();
         }
-
     }
 
 

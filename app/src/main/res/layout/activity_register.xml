@@ -97,7 +97,7 @@
                 android:layout_marginStart="50dp"
                 android:layout_marginTop="35dp"
                 android:layout_marginEnd="50dp"
-                android:background="@drawable/button_background_style"
+                android:background="@drawable/button_background_shape"
                 android:text="Create Account"
                 android:textAllCaps="false"
                 android:textColor="@android:color/white"
