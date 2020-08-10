@@ -1,6 +1,5 @@
 package com.nisith.smartchat.Adapters;
 
-import android.view.View;
 
 import com.nisith.smartchat.Fragments.ChatFragment;
 import com.nisith.smartchat.Fragments.FriendRequestFragment;

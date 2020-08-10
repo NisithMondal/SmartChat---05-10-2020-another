@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    app:cardBackgroundColor="#ffffff"
+    android:layout_margin="5dp"
+    app:cardCornerRadius="5dp"
+    app:cardElevation="4dp"
+    android:id="@+id/root_view"
+    >
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <de.hdodenhof.circleimageview.CircleImageView
+            android:id="@+id/profile_image_view"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_centerVertical="true"
+            android:layout_margin="15dp"
+            android:src="@drawable/default_user_icon"
+            />
+
+        <TextView
+            android:id="@+id/user_name_text_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_toEndOf="@+id/profile_image_view"
+            android:layout_marginTop="22dp"
+            android:textColor="#000000"
+            android:text="Gia Karter"
+            android:textSize="16sp"
+            android:layout_marginEnd="10dp"
+            android:textStyle="bold"
+            android:layout_marginStart="7dp"
+            android:maxLines="1"
+            android:layout_toStartOf="@+id/request_type_text_view"
+            />
+
+
+        <TextView
+            android:id="@+id/request_type_text_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="22dp"
+            android:textColor="#454343"
+            android:text="Request Send"
+            android:textSize="16sp"
+            android:layout_marginEnd="10dp"
+            android:layout_alignParentEnd="true"
+            android:textStyle="normal"
+            android:drawableEnd="@drawable/ic_arrow_up_icon"
+            />
+
+        <Button
+            android:id="@+id/accept_request_button"
+            android:layout_width="wrap_content"
+            android:layout_height="35dp"
+            android:background="@drawable/button_background_shape1"
+            android:text="Accept"
+            android:textAllCaps="false"
+            android:textSize="15sp"
+            android:textColor="#ffffff"
+            android:layout_below="@+id/user_name_text_view"
+            android:layout_toEndOf="@+id/profile_image_view"
+            android:layout_marginTop="12dp"
+            android:layout_marginStart="7dp"
+            android:padding="6dp"
+            />
+
+
+        <Button
+            android:id="@+id/decline_request_button"
+            android:layout_width="wrap_content"
+            android:layout_height="35dp"
+            android:background="@drawable/button_background_shape4"
+            android:text="Decline"
+            android:textAllCaps="false"
+            android:layout_marginTop="10dp"
+            android:layout_below="@+id/request_type_text_view"
+            android:textSize="15sp"
+            android:textColor="#ffffff"
+            android:layout_toEndOf="@+id/user_name_text_view"
+            android:padding="8dp"
+            />
+
+    </RelativeLayout>
+
+</androidx.cardview.widget.CardView>

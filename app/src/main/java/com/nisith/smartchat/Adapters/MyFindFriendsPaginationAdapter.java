@@ -9,6 +9,7 @@ import android.widget.TextView;
 import com.firebase.ui.database.paging.DatabasePagingOptions;
 import com.firebase.ui.database.paging.FirebaseRecyclerPagingAdapter;
 import com.firebase.ui.database.paging.LoadingState;
+import com.google.firebase.auth.FirebaseAuth;
 import com.nisith.smartchat.Model.UserProfile;
 import com.nisith.smartchat.R;
 import com.squareup.picasso.Picasso;
@@ -40,16 +41,14 @@ public class MyFindFriendsPaginationAdapter extends FirebaseRecyclerPagingAdapte
 
     @Override
     protected void onBindViewHolder(@NonNull MyViewHolder viewHolder, int position, @NonNull UserProfile userProfile) {
-        viewHolder.userNameTextView.setText(userProfile.getUserName());
-        viewHolder.userStatusTextView.setText(userProfile.getUserStatus());
-        String imageUrl = userProfile.getProfileImage();
-        if (! imageUrl.equalsIgnoreCase("default")){
-            Picasso.get().load(imageUrl).placeholder(R.drawable.user_icon).into(viewHolder.profileImageView);
-        }else {
-            Picasso.get().load(R.drawable.user_icon).into(viewHolder.profileImageView);
-        }
-        Log.d("ABCDE","getItemCount = "+getItemCount());
-
+            viewHolder.userNameTextView.setText(userProfile.getUserName());
+            viewHolder.userStatusTextView.setText(userProfile.getUserStatus());
+            String imageUrl = userProfile.getProfileImage();
+            if (!imageUrl.equalsIgnoreCase("default")) {
+                Picasso.get().load(imageUrl).placeholder(R.drawable.user_icon).into(viewHolder.profileImageView);
+            } else {
+                Picasso.get().load(R.drawable.user_icon).into(viewHolder.profileImageView);
+            }
     }
 
     @Override

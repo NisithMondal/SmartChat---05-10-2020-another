@@ -6,6 +6,7 @@ public class Constant {
     public static final String USER_NAME = "profile_user_name";
     public static final String FRIEND_UID = "friend_user_id";
     public static final String FRIEND = "friend";
+    public static final String SAME_USER = "same user";
     public static final String UN_FRIEND = "un_friend";
     public static final String NOT_FRIEND = "not_friend";
     public static final String SEND_REQUEST = "send_request";

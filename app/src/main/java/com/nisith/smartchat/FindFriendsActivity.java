@@ -1,6 +1,5 @@
 package com.nisith.smartchat;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.paging.PagedList;
@@ -26,7 +25,6 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.nisith.smartchat.Adapters.MyFindFriendsPaginationAdapter;
-import com.nisith.smartchat.Adapters.MyFirebaseRecyclerAdapter;
 import com.nisith.smartchat.Model.UserProfile;
 
 public class FindFriendsActivity extends AppCompatActivity implements MyFindFriendsPaginationAdapter.OnCardItemClickListener {

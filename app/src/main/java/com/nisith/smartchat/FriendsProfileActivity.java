@@ -7,6 +7,7 @@ import de.hdodenhof.circleimageview.CircleImageView;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -36,10 +37,10 @@ import java.util.Map;
      //Firebase
      private DatabaseReference databaseRef;
      private DatabaseReference friendRequestDatabaseRef;
+     private DatabaseReference friendsDatabaseRef;
      private ValueEventListener valueEventListener;
-     private String friendUid;
+     private String friendUid, currentUserId;
      private String requestSenderUid, requestReceiverUid;
-
      private String requestStatus = Constant.NOT_FRIEND; //Type of request i.e. send_request, cancel_request, accept_request, decline_request
 
     @Override
@@ -53,7 +54,9 @@ import java.util.Map;
         if (friendUid != null){
             databaseRef = FirebaseDatabase.getInstance().getReference().child("users").child(friendUid);
             friendRequestDatabaseRef = FirebaseDatabase.getInstance().getReference().child("friend_requests");
+            friendsDatabaseRef = FirebaseDatabase.getInstance().getReference().child("friends");
             requestSenderUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+            currentUserId = requestSenderUid;
             requestReceiverUid = friendUid;
             showFriendProfile();
             setFriendRequestButtonState();
@@ -131,12 +134,18 @@ import java.util.Map;
                            }
                         }else {
                             //if current user has no child of this friend
-                            requestStatus = Constant.NOT_FRIEND;
+                            if (currentUserId.equals(friendUid)){
+                                //Means Current user open his/her own profile
+                                requestStatus = Constant.SAME_USER;
+                            }else {
+                                //Means they are new to each other
+                                requestStatus = Constant.NOT_FRIEND;
+                            }
                         }
 
 
                         if (requestStatus.equals(Constant.NOT_FRIEND)){
-                            //They are new to each other
+                            //They are new to each other.
                             friendRequestButton.setVisibility(View.VISIBLE);
                             friendRequestButton.setEnabled(true);
                             friendRequestButton.setText("Send Friend Request");
@@ -145,8 +154,17 @@ import java.util.Map;
                             declineRequestButton.setVisibility(View.INVISIBLE);
                             declineRequestButton.setEnabled(false);
 
-                        }else if (requestStatus.equals(Constant.SEND_REQUEST)){
-                            //Current User send friend request to this friend
+                        }else if (requestStatus.equals(Constant.SAME_USER)){
+                            //Current user open his/her own profile.
+                            displayMessageTextView.setText("Your Own Profile");
+                            displayMessageTextView.setVisibility(View.VISIBLE);
+                            friendRequestButton.setVisibility(View.INVISIBLE);
+                            declineRequestButton.setVisibility(View.INVISIBLE);
+                            friendRequestButton.setEnabled(false);
+                            declineRequestButton.setEnabled(false);
+
+                        } else if (requestStatus.equals(Constant.SEND_REQUEST)){
+                            //Current User send friend request to this friend.
                             friendRequestButton.setText("Cancel Friend Request");
                             friendRequestButton.setBackground(getDrawable(R.drawable.button_background_shape3));
                             displayMessageTextView.setVisibility(View.GONE);
@@ -154,7 +172,7 @@ import java.util.Map;
                             declineRequestButton.setEnabled(false);
 
                         }else if (requestStatus.equals(Constant.RECEIVE_REQUEST)){
-                            //This friend send request to the Current User
+                            //This friend send request to the Current User.
                             friendRequestButton.setText("Accept Request");
                             friendRequestButton.setBackground(getDrawable(R.drawable.button_background_shape1));
                             declineRequestButton.setText("Decline Request");
@@ -163,7 +181,7 @@ import java.util.Map;
                             declineRequestButton.setVisibility(View.VISIBLE);
 
                         }else if (requestStatus.equals(Constant.FRIEND)){
-                            //They are now friends
+                            //Both of you are friends now.
                             displayMessageTextView.setText("Both of you are friends now");
                             displayMessageTextView.setVisibility(View.VISIBLE);
                             declineRequestButton.setText("UnFriend");
@@ -204,7 +222,6 @@ import java.util.Map;
 
 
      private void acceptFriendRequest(){
-        final DatabaseReference friendsDatabaseRef = FirebaseDatabase.getInstance().getReference().child("friends");
         Map<String, Object> map = new HashMap<>();
         map.put(requestSenderUid+"/"+requestReceiverUid,new FriendRequest(Constant.FRIEND));
         map.put(requestReceiverUid+"/"+requestSenderUid,new FriendRequest(Constant.FRIEND));
@@ -228,11 +245,35 @@ import java.util.Map;
 
      private void declineFriendRequest(){
         if (declineRequestButton.getVisibility() == View.VISIBLE){
-            if (declineRequestButton.getText().toString().equalsIgnoreCase("Decline Request"))
-            cancelFriendRequest();
-        }else if (declineRequestButton.getText().toString().equalsIgnoreCase("UnFriend")){
 
+            if (declineRequestButton.getText().toString().equalsIgnoreCase("Decline Request")) {
+                //Decline Request
+                cancelFriendRequest();
+            }else if (declineRequestButton.getText().toString().equalsIgnoreCase("UnFriend")){
+                //UnFriend
+                unFriend();
+            }
         }
+     }
+
+     private void unFriend(){
+         Map<String, Object> unFriendMap = new HashMap<>();
+         unFriendMap.put(requestSenderUid+"/"+requestReceiverUid, null);
+         unFriendMap.put(requestReceiverUid+"/"+requestSenderUid, null);
+         friendRequestDatabaseRef.updateChildren(unFriendMap, new DatabaseReference.CompletionListener() {
+             @Override
+             public void onComplete(@Nullable DatabaseError error, @NonNull DatabaseReference ref) {
+                 if (error == null){
+                     //all ok
+                     Map<String, Object> friendsMap = new HashMap<>();
+                     friendsMap.put(requestSenderUid+"/"+requestReceiverUid,null);
+                     friendsMap.put(requestReceiverUid+"/"+requestSenderUid,null);
+                     friendsDatabaseRef.updateChildren(friendsMap);
+
+                 }
+             }
+         });
+
      }
 
      private void cancelFriendRequest(){
@@ -242,6 +283,9 @@ import java.util.Map;
          requestStatus = Constant.NOT_FRIEND;
          friendRequestDatabaseRef.updateChildren(dataMap);
      }
+
+
+
 
      @Override
      protected void onStop() {
