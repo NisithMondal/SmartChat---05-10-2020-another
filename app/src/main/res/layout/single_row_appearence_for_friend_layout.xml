@@ -2,7 +2,9 @@
 <androidx.cardview.widget.CardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:id="@+id/root_view"
+    >
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -23,12 +25,23 @@
             android:layout_height="wrap_content"
             android:layout_toEndOf="@+id/profile_image_view"
             android:layout_marginTop="22dp"
-            android:text="Gia Karter"
+            android:text="Samaresh Mondal "
             android:textColor="#000000"
             android:textSize="18sp"
             android:layout_marginEnd="10dp"
+            android:layout_toStartOf="@+id/online_state_image_view"
             android:textStyle="bold"
             android:maxLines="1"
+            />
+
+        <ImageView
+            android:id="@+id/online_state_image_view"
+            android:layout_width="10dp"
+            android:layout_height="10dp"
+            android:src="@drawable/ic_green_dot_icon"
+            android:layout_alignParentEnd="true"
+            android:layout_marginTop="26dp"
+            android:layout_marginEnd="16dp"
             />
 
 

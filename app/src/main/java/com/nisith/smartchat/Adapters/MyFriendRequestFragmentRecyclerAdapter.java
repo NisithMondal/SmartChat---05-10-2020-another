@@ -1,5 +1,6 @@
 package com.nisith.smartchat.Adapters;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -27,7 +28,7 @@ import de.hdodenhof.circleimageview.CircleImageView;
 public class MyFriendRequestFragmentRecyclerAdapter extends RecyclerView.Adapter<MyFriendRequestFragmentRecyclerAdapter.MyViewHolder> {
 
     public interface OnRequestButtonClickListener{
-        void onRequestButtonClick(View view);
+        void onRequestButtonClick(View view, int position);
     }
 
     private OnRequestButtonClickListener requestButtonClickListener;
@@ -110,17 +111,22 @@ public class MyFriendRequestFragmentRecyclerAdapter extends RecyclerView.Adapter
             requestTypeTextView = itemView.findViewById(R.id.request_type_text_view);
             acceptRequestButton = itemView.findViewById(R.id.accept_request_button);
             declineRequestButton = itemView.findViewById(R.id.decline_request_button);
-            itemView.setOnClickListener(new MyClickListener());
-            profileImageView.setOnClickListener(new MyClickListener());
-            acceptRequestButton.setOnClickListener(new MyClickListener());
-            declineRequestButton.setOnClickListener(new MyClickListener());
+            itemView.setOnClickListener(new MyClickListener(this));
+            profileImageView.setOnClickListener(new MyClickListener(this));
+            acceptRequestButton.setOnClickListener(new MyClickListener(this));
+            declineRequestButton.setOnClickListener(new MyClickListener(this));
+
         }
     }
 
     class MyClickListener implements View.OnClickListener{
+        private MyViewHolder myViewHolder;
+        public MyClickListener(MyViewHolder myViewHolder){
+            this.myViewHolder = myViewHolder;
+        }
         @Override
         public void onClick(View view) {
-           requestButtonClickListener.onRequestButtonClick(view);
+            requestButtonClickListener.onRequestButtonClick(view, myViewHolder.getAbsoluteAdapterPosition());
         }
     }
 }

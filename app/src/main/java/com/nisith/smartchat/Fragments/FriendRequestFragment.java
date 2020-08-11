@@ -1,5 +1,6 @@
 package com.nisith.smartchat.Fragments;
 
+import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -23,11 +24,14 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.nisith.smartchat.Adapters.MyFriendRequestFragmentRecyclerAdapter;
 import com.nisith.smartchat.Constant;
+import com.nisith.smartchat.FriendsProfileActivity;
 import com.nisith.smartchat.Model.FriendRequest;
 import com.nisith.smartchat.R;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class FriendRequestFragment extends Fragment implements MyFriendRequestFragmentRecyclerAdapter.OnRequestButtonClickListener {
 
@@ -35,10 +39,12 @@ public class FriendRequestFragment extends Fragment implements MyFriendRequestFr
     private MyFriendRequestFragmentRecyclerAdapter adapter;
     private List<FriendRequest> friendRequestList;
     //Firebase
+    private DatabaseReference friendsDatabaseRef;
     private DatabaseReference friendRequestDatabaseRef;
+    private DatabaseReference friendRequestDatabaseRootRef;
     private ChildEventListener childEventListener;
     private String currentUserId;
-
+    private String requestSenderUid, requestReceiverUid;
     public FriendRequestFragment() {
         // Required empty public constructor
     }
@@ -57,6 +63,8 @@ public class FriendRequestFragment extends Fragment implements MyFriendRequestFr
         //This method is called after the onCreate() method is executed of activity i.e. in this case HomeActivity
         currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
         friendRequestDatabaseRef = FirebaseDatabase.getInstance().getReference().child("friend_requests").child(currentUserId);
+        friendRequestDatabaseRootRef = FirebaseDatabase.getInstance().getReference().child("friend_requests");
+        friendsDatabaseRef = FirebaseDatabase.getInstance().getReference().child("friends");
         friendRequestList = new ArrayList<>();
         setUpRecyclerViewWithAdapter();
     }
@@ -143,11 +151,14 @@ public class FriendRequestFragment extends Fragment implements MyFriendRequestFr
     }
 
     @Override
-    public void onRequestButtonClick(View view) {
+    public void onRequestButtonClick(View view, int position) {
+        String friendUid = friendRequestList.get(position).getFriendKey();
         switch (view.getId()){
             case R.id.root_view:
                 //Card view is Clicked
-                Toast.makeText(getContext(), "Parent View", Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(getContext(), FriendsProfileActivity.class);
+                intent.putExtra(Constant.FRIEND_UID, friendUid);
+                startActivity(intent);
                 break;
 
             case R.id.profile_image_view:
@@ -157,18 +168,55 @@ public class FriendRequestFragment extends Fragment implements MyFriendRequestFr
 
             case R.id.accept_request_button:
                 //Accept Button is Clicked
-                Toast.makeText(getContext(), "Accept", Toast.LENGTH_SHORT).show();
+                acceptFriendRequest(friendUid);
                 break;
 
             case R.id.decline_request_button:
                 //Decline Button is Clicked
                 Button button = (Button) view;
                 String buttonCaption = button.getText().toString();
+                //cancelFriendRequest() is called in both if and else condition. This is redendant. But I write this two times because for easy understanding.
+                //But this is not necessary.
                 if (buttonCaption.equalsIgnoreCase("Decline")){
-                    Toast.makeText(getContext(), "Decline", Toast.LENGTH_SHORT).show();
+                    cancelFriendRequest(friendUid);
                 }else if (buttonCaption.equalsIgnoreCase("Cancel Request")){
-                    Toast.makeText(getContext(), "Cancel Request", Toast.LENGTH_SHORT).show();
+                    cancelFriendRequest(friendUid);
                 }
         }
     }
+
+    private void acceptFriendRequest(String friendUid){
+        requestSenderUid = currentUserId; //means Current User Id
+        requestReceiverUid = friendUid; //means Friend User Id
+        Map<String, Object> map = new HashMap<>();
+        map.put(requestSenderUid+"/"+requestReceiverUid,new FriendRequest(Constant.FRIEND));
+        map.put(requestReceiverUid+"/"+requestSenderUid,new FriendRequest(Constant.FRIEND));
+        friendRequestDatabaseRootRef.updateChildren(map, new DatabaseReference.CompletionListener() {
+            @Override
+            public void onComplete(@Nullable DatabaseError error, @NonNull DatabaseReference ref) {
+                if (error == null){
+                    //all ok
+                    Map<String, Object> map1 = new HashMap<>();
+                    map1.put("time","now");
+                    Map<String, Object> friendsMap = new HashMap<>();
+                    friendsMap.put(requestSenderUid+"/"+requestReceiverUid,map1);
+                    friendsMap.put(requestReceiverUid+"/"+requestSenderUid,map1);
+                    friendsDatabaseRef.updateChildren(friendsMap);
+                }
+            }
+        });
+    }
+
+
+
+    private void cancelFriendRequest(String friendUid){
+        requestSenderUid = currentUserId; //means Current User Id
+        requestReceiverUid = friendUid; //means Friend User Id
+        Map<String, Object> dataMap = new HashMap<>();
+        dataMap.put(requestSenderUid + "/" + requestReceiverUid, null);
+        dataMap.put(requestReceiverUid + "/" + requestSenderUid, null);;
+        friendRequestDatabaseRootRef.updateChildren(dataMap);
+    }
+
+
 }

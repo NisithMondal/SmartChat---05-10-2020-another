@@ -55,9 +55,9 @@ import java.util.Map;
             databaseRef = FirebaseDatabase.getInstance().getReference().child("users").child(friendUid);
             friendRequestDatabaseRef = FirebaseDatabase.getInstance().getReference().child("friend_requests");
             friendsDatabaseRef = FirebaseDatabase.getInstance().getReference().child("friends");
-            requestSenderUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+            requestSenderUid = FirebaseAuth.getInstance().getCurrentUser().getUid(); //means Current User Id
             currentUserId = requestSenderUid;
-            requestReceiverUid = friendUid;
+            requestReceiverUid = friendUid; //means Friend User Id
             showFriendProfile();
             setFriendRequestButtonState();
         }
