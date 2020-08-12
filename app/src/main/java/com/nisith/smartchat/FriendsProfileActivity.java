@@ -3,6 +3,7 @@
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import de.hdodenhof.circleimageview.CircleImageView;
 
 import android.content.Intent;
@@ -29,11 +30,13 @@ import java.util.Map;
 
  public class FriendsProfileActivity extends AppCompatActivity {
 
+     private Toolbar appToolbar;
      private ImageView backgroundImageView;
      private CircleImageView profileImageView;
-     private TextView userNameTextView, userStatusTextView;
+     private TextView userNameTextView, userStatusTextView, userInfoTextView, infoTextHeading;
      private Button friendRequestButton, declineRequestButton;
      private TextView displayMessageTextView;
+     private String friendName, profileImageUrl;
      //Firebase
      private DatabaseReference databaseRef;
      private DatabaseReference friendRequestDatabaseRef;
@@ -48,6 +51,15 @@ import java.util.Map;
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_friends_profile);
         initializeViews();
+        setSupportActionBar(appToolbar);
+        setTitle("");
+        appToolbar.setNavigationIcon(R.drawable.ic_back_arrow_icon);
+        appToolbar.setNavigationOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                finish();
+            }
+        });
         Picasso.get().load(R.drawable.wallpaper2).into(backgroundImageView);
         Intent intent = getIntent();
         friendUid = intent.getStringExtra(Constant.FRIEND_UID);
@@ -63,15 +75,27 @@ import java.util.Map;
         }
         friendRequestButton.setOnClickListener(new MyButtonClickListener());
         declineRequestButton.setOnClickListener(new MyButtonClickListener());
+        profileImageView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent imageDisplayIntent = new Intent(FriendsProfileActivity.this, ImageDisplayActivity.class);
+                imageDisplayIntent.putExtra(Constant.USER_NAME, friendName);
+                imageDisplayIntent.putExtra(Constant.PROFILE_IMAGE_URL, profileImageUrl);
+                startActivity(imageDisplayIntent);
+            }
+        });
 
 
     }
 
     private void initializeViews(){
+        appToolbar = findViewById(R.id.app_toolbar);
         backgroundImageView = findViewById(R.id.background_image_view);
         profileImageView = findViewById(R.id.profile_image_view);
         userNameTextView = findViewById(R.id.user_name_text_view);
         userStatusTextView = findViewById(R.id.user_status_text_view);
+        userInfoTextView = findViewById(R.id.user_info_text_view);
+        infoTextHeading = findViewById(R.id.info_text_heading);
         friendRequestButton = findViewById(R.id.friend_request_button);
         declineRequestButton = findViewById(R.id.decline_request_button);
         displayMessageTextView = findViewById(R.id.display_message_text_view);
@@ -83,10 +107,12 @@ import java.util.Map;
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
                       UserProfile friendUserProfile = snapshot.getValue(UserProfile.class);
                       if (friendUserProfile != null){
-                          String friendName = friendUserProfile.getUserName();
+                          friendName = friendUserProfile.getUserName();
                           String friendStatus = friendUserProfile.getUserStatus();
-                          String profileImageUrl = friendUserProfile.getProfileImage();
+                          profileImageUrl = friendUserProfile.getProfileImage();
                           userNameTextView.setText(friendName);
+                          //set the heading of about user fields
+                          infoTextHeading.setText(friendName);
                           userStatusTextView.setText(friendStatus);
                           if (! profileImageUrl.equals("default")){
                               Picasso.get().load(profileImageUrl).placeholder(R.drawable.default_user_icon).into(profileImageView);

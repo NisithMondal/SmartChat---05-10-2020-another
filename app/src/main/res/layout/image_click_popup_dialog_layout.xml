@@ -3,7 +3,7 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="20dp"
+    android:layout_margin="50dp"
     >
 
 
@@ -24,7 +24,7 @@
     <ImageView
         android:id="@+id/profile_image_view"
         android:layout_width="match_parent"
-        android:layout_height="280dp"
+        android:layout_height="250dp"
         android:src="@drawable/default_user_icon"
         android:scaleType="fitCenter"
         android:layout_below="@+id/user_name_text_view"

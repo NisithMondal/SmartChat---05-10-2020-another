@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -27,7 +28,7 @@ public class ProfileSettingActivity extends AppCompatActivity {
 
     private Toolbar appToolbar;
     private TextView toolbarTextView;
-    private CircleImageView profileImageView;
+    private ImageView profileImageView;
     private TextView userNameTextView, userStatusTextView;
     private ProgressBar progressBar;
     private Button editProfileButton;
@@ -105,7 +106,7 @@ public class ProfileSettingActivity extends AppCompatActivity {
 
                         if (! profileImageUrl.equalsIgnoreCase("default")){
                             //means profileImage value is not default.
-                            Picasso.get().load(profileImageUrl).placeholder(R.drawable.default_user_icon).into(profileImageView);
+                            Picasso.get().load(profileImageUrl).fit().placeholder(R.drawable.default_user_icon).into(profileImageView);
                         }
                     }
                 }

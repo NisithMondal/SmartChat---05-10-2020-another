@@ -9,12 +9,10 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.ChildEventListener;
@@ -24,6 +22,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.nisith.smartchat.Adapters.MyFriendRequestFragmentRecyclerAdapter;
 import com.nisith.smartchat.Constant;
+import com.nisith.smartchat.DialogBox.ImageClickDialog;
 import com.nisith.smartchat.FriendsProfileActivity;
 import com.nisith.smartchat.Model.FriendRequest;
 import com.nisith.smartchat.R;
@@ -163,7 +162,7 @@ public class FriendRequestFragment extends Fragment implements MyFriendRequestFr
 
             case R.id.profile_image_view:
                 //Circle Image view is Clicked
-                Toast.makeText(getContext(), "Image View", Toast.LENGTH_SHORT).show();
+                showImageDialog(friendUid);
                 break;
 
             case R.id.accept_request_button:
@@ -183,6 +182,11 @@ public class FriendRequestFragment extends Fragment implements MyFriendRequestFr
                     cancelFriendRequest(friendUid);
                 }
         }
+    }
+
+    private void showImageDialog(String friendUid){
+        ImageClickDialog dialog = new ImageClickDialog(friendUid);
+        dialog.show(getActivity().getSupportFragmentManager(),"smart chat");
     }
 
     private void acceptFriendRequest(String friendUid){

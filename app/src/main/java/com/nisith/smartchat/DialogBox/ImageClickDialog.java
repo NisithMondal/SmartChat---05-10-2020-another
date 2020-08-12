@@ -5,12 +5,10 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.auto.value.AutoAnnotation;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
@@ -29,13 +27,13 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
 
-public class FriendImageClickDialog extends DialogFragment {
+public class ImageClickDialog extends DialogFragment {
 
     private TextView userNameTextView;
     private ImageView profileImageView;
     private String userName, profileImageUrl, uId;
 
-    public FriendImageClickDialog(String uId){
+    public ImageClickDialog(String uId){
         this.uId = uId;
         FirebaseDatabase.getInstance().getReference().child("users").child(uId)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
@@ -74,10 +72,10 @@ public class FriendImageClickDialog extends DialogFragment {
         profileImageView = view.findViewById(R.id.profile_image_view);
         ImageView infoImageView = view.findViewById(R.id.info_image_view);
         ImageView chatImageView = view.findViewById(R.id.chat_image_view);
+        chatImageView.setVisibility(View.GONE);
         //Click Listeners
         profileImageView.setOnClickListener(new MyViewClickListener());
         infoImageView.setOnClickListener(new MyViewClickListener());
-        chatImageView.setOnClickListener(new MyViewClickListener());
         AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(Objects.requireNonNull(getContext()))
                 .setView(view);
 
@@ -102,10 +100,6 @@ public class FriendImageClickDialog extends DialogFragment {
                     Intent infoIntent = new Intent(getContext(), FriendsProfileActivity.class);
                     infoIntent.putExtra(Constant.FRIEND_UID, uId);
                     startActivity(infoIntent);
-                    break;
-
-                case R.id.chat_image_view:
-                    Toast.makeText(getContext(), "chat Image View", Toast.LENGTH_SHORT).show();
             }
         }
     }

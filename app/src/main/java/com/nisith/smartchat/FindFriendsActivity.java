@@ -25,6 +25,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.nisith.smartchat.Adapters.MyFindFriendsPaginationAdapter;
+import com.nisith.smartchat.DialogBox.ImageClickDialog;
 import com.nisith.smartchat.Model.UserProfile;
 
 public class FindFriendsActivity extends AppCompatActivity implements MyFindFriendsPaginationAdapter.OnCardItemClickListener {
@@ -120,9 +121,24 @@ public class FindFriendsActivity extends AppCompatActivity implements MyFindFrie
 
 
     @Override
-    public void onCardItemClick(String userProfileId) {
-        Intent intent = new Intent(this,FriendsProfileActivity.class);
-        intent.putExtra(Constant.FRIEND_UID,userProfileId);
-        startActivity(intent);
+    public void onCardItemClick(View view, String userProfileId) {
+        switch (view.getId()){
+            case R.id.profile_image_view:
+                showImageDialog(userProfileId);
+                break;
+
+            case R.id.root_view:
+                Intent intent = new Intent(this,FriendsProfileActivity.class);
+                intent.putExtra(Constant.FRIEND_UID,userProfileId);
+                startActivity(intent);
+
+        }
+
     }
+
+    private void showImageDialog(String friendUid){
+        ImageClickDialog dialog = new ImageClickDialog(friendUid);
+        dialog.show(getSupportFragmentManager(),"smart chat");
+    }
+
 }

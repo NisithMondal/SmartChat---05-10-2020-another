@@ -65,7 +65,7 @@ public class MyFriendFragmentRecyclerAdapter extends FirebaseRecyclerAdapter<Fri
                                 if (!imageUrl.equalsIgnoreCase("default")) {
                                     Picasso.get().load(imageUrl).placeholder(R.drawable.user_icon).into(holder.profileImageView);
                                 } else {
-                                    Picasso.get().load(R.drawable.user_icon).into(holder.profileImageView);
+                                    Picasso.get().load(R.drawable.user_icon).placeholder(R.drawable.user_icon).into(holder.profileImageView);
                                 }
                             }
                         }

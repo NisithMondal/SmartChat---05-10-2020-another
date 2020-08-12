@@ -102,7 +102,7 @@ public class HomeActivity extends AppCompatActivity {
                 Toast.makeText(this, "Create Group", Toast.LENGTH_SHORT).show();
                 break;
 
-            case R.id.profile_setting:
+            case R.id.my_profile:
                 startActivity(new Intent(HomeActivity.this,ProfileSettingActivity.class));
                 break;
 

@@ -22,7 +22,7 @@ import de.hdodenhof.circleimageview.CircleImageView;
 public class MyFindFriendsPaginationAdapter extends FirebaseRecyclerPagingAdapter<UserProfile, MyFindFriendsPaginationAdapter.MyViewHolder> {
 
     public interface OnCardItemClickListener{
-        void onCardItemClick(String userProfileId);
+        void onCardItemClick(View view, String userProfileId);
     }
 
     private OnCardItemClickListener cardItemClickListener;
@@ -47,7 +47,7 @@ public class MyFindFriendsPaginationAdapter extends FirebaseRecyclerPagingAdapte
             if (!imageUrl.equalsIgnoreCase("default")) {
                 Picasso.get().load(imageUrl).placeholder(R.drawable.user_icon).into(viewHolder.profileImageView);
             } else {
-                Picasso.get().load(R.drawable.user_icon).into(viewHolder.profileImageView);
+                Picasso.get().load(R.drawable.user_icon).placeholder(R.drawable.user_icon).into(viewHolder.profileImageView);
             }
     }
 
@@ -70,7 +70,15 @@ public class MyFindFriendsPaginationAdapter extends FirebaseRecyclerPagingAdapte
                 @Override
                 public void onClick(View v) {
                     String userProfileId = getRef(getAbsoluteAdapterPosition()).getKey();
-                    cardItemClickListener.onCardItemClick(userProfileId);
+                    cardItemClickListener.onCardItemClick(v, userProfileId);
+                }
+            });
+
+            profileImageView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    String userProfileId = getRef(getAbsoluteAdapterPosition()).getKey();
+                    cardItemClickListener.onCardItemClick(v, userProfileId);
                 }
             });
         }
