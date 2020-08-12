@@ -99,7 +99,7 @@ public class HomeActivity extends AppCompatActivity {
                 break;
 
             case R.id.Create_group:
-                Toast.makeText(this, "Create Group", Toast.LENGTH_SHORT).show();
+                startActivity(new Intent(HomeActivity.this, CreateGroupActivity.class));
                 break;
 
             case R.id.my_profile:
@@ -114,7 +114,6 @@ public class HomeActivity extends AppCompatActivity {
                 firebaseAuth.signOut();
                 openLoginActivity();
                 finishAffinity();
-                break;
         }
         return true;
     }

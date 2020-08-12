@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ChatActivity">
+
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/app_toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="63dp"
+        android:background="@color/colorPrimary"
+
+        >
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            >
+
+            <ImageView
+                android:id="@+id/back_arrow_image_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_back_arrow_icon"
+                android:layout_centerVertical="true"
+                />
+
+            <de.hdodenhof.circleimageview.CircleImageView
+                android:id="@+id/profile_image_view"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:src="@drawable/default_user_icon"
+                android:layout_centerVertical="true"
+                android:layout_toEndOf="@+id/back_arrow_image_view"
+                android:layout_marginStart="7dp"
+                />
+
+            <TextView
+                android:id="@+id/profile_name_text_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_toEndOf="@+id/profile_image_view"
+                android:layout_marginStart="10dp"
+                android:layout_marginTop="8dp"
+                android:textStyle="bold"
+                android:textColor="#ffffff"
+                android:textSize="18sp"
+                android:maxLines="1"
+                android:layout_marginEnd="15dp"
+                />
+
+            <TextView
+                android:id="@+id/online_state_image_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:textSize="15sp"
+                android:textColor="#ffffff"
+                android:textStyle="normal"
+                android:layout_toEndOf="@+id/profile_image_view"
+                android:layout_below="@+id/profile_name_text_view"
+                android:layout_marginTop="1dp"
+                />
+        </RelativeLayout>
+    </androidx.appcompat.widget.Toolbar>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recycler_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scrollbars="vertical"
+        android:layout_below="@+id/app_toolbar"
+        />
+
+
+</RelativeLayout>

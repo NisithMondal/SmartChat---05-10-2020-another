@@ -27,7 +27,7 @@
             <ImageView
                 android:id="@+id/profile_image_view"
                 android:layout_width="match_parent"
-                android:layout_height="300dp"
+                android:layout_height="270dp"
                 android:src="@drawable/default_user_icon"
                 />
 
@@ -45,16 +45,65 @@
 
 
             <TextView
+                android:id="@+id/status_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="16sp"
+                android:layout_below="@+id/user_name_text_view"
+                android:text="Status:"
+                android:layout_marginTop="10dp"
+                android:textStyle="bold"
+                android:textColor="#393A39"
+                android:paddingStart="4dp"
+                android:paddingTop="10dp"
+                android:paddingBottom="5dp"
+                android:drawableStart="@drawable/ic_about_icon"
+                android:drawablePadding="5dp"
+                />
+
+            <TextView
                 android:id="@+id/user_status_text_view"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="User Status..."
-                android:textAlignment="center"
-                android:textSize="20sp"
-                android:textColor="#000000"
-                android:layout_below="@+id/user_name_text_view"
-                android:layout_marginTop="14dp"
-                android:padding="15dp"
+                android:textSize="16sp"
+                android:layout_below="@+id/status_text"
+                android:text="Life is a bed of Rose"
+                android:layout_marginTop="0dp"
+                android:textStyle="normal"
+                android:textColor="#4B4E4B"
+                android:paddingStart="36dp"
+                android:paddingEnd="15dp"
+                />
+
+            <TextView
+                android:id="@+id/info_text_heading"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="16sp"
+                android:layout_below="@+id/user_status_text_view"
+                android:text="About Me:"
+                android:layout_marginTop="10dp"
+                android:textStyle="bold"
+                android:textColor="#393A39"
+                android:paddingStart="4dp"
+                android:paddingTop="10dp"
+                android:paddingBottom="5dp"
+                android:drawableStart="@drawable/ic_about_icon"
+                android:drawablePadding="5dp"
+                />
+
+            <TextView
+                android:id="@+id/user_info_text_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="16sp"
+                android:layout_below="@+id/info_text_heading"
+                android:text="I am 20 Years old a beautiful girl. I am studing in Haldia Institute of Technology in third year."
+                android:layout_marginTop="0dp"
+                android:textStyle="normal"
+                android:textColor="#4B4E4B"
+                android:paddingStart="35dp"
+                android:paddingEnd="15dp"
                 />
 
             <ProgressBar
@@ -63,27 +112,28 @@
                 android:layout_height="55dp"
                 android:layout_below="@+id/user_status_text_view"
                 android:layout_centerHorizontal="true"
-                android:layout_marginTop="15dp"
+                android:layout_marginTop="0dp"
                 />
 
 
             <Button
                 android:id="@+id/edit_profile_button"
-                android:layout_width="170dp"
+                android:layout_width="160dp"
                 android:layout_height="wrap_content"
                 android:layout_centerHorizontal="true"
-                android:layout_below="@+id/user_status_text_view"
-                android:layout_marginTop="100dp"
+                android:layout_below="@+id/user_info_text_view"
+                android:layout_marginTop="20dp"
                 android:text="Edit  Profile"
                 android:textAllCaps="false"
                 android:textSize="19sp"
                 android:padding="10dp"
                 android:textColor="#ffffff"
+                android:textStyle="bold|italic"
                 android:background="@drawable/button_background_shape"
+                android:layout_marginBottom="100dp"
                 />
 
         </RelativeLayout>
     </ScrollView>
-
 
 </RelativeLayout>

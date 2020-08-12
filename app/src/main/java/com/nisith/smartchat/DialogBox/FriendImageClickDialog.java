@@ -15,6 +15,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.nisith.smartchat.ChatActivity;
 import com.nisith.smartchat.Constant;
 import com.nisith.smartchat.FriendsProfileActivity;
 import com.nisith.smartchat.ImageDisplayActivity;
@@ -43,7 +44,7 @@ public class FriendImageClickDialog extends DialogFragment {
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
                         if (snapshot.exists()){
                             UserProfile userProfile = snapshot.getValue(UserProfile.class);
-                            if (userProfile != null){
+                            if (userProfile != null && userNameTextView != null){
                                 userName = userProfile.getUserName();
                                 userNameTextView.setText(userName);
                                 profileImageUrl = userProfile.getProfileImage();
@@ -105,7 +106,9 @@ public class FriendImageClickDialog extends DialogFragment {
                     break;
 
                 case R.id.chat_image_view:
-                    Toast.makeText(getContext(), "chat Image View", Toast.LENGTH_SHORT).show();
+                    Intent chatIntent = new Intent(getContext(), ChatActivity.class);
+                    chatIntent.putExtra(Constant.FRIEND_UID, uId);
+                    startActivity(chatIntent);
             }
         }
     }

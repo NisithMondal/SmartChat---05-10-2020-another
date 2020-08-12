@@ -60,7 +60,7 @@
             android:textColor="#000000"
             android:layout_toStartOf="@+id/name_edit_icon"
             android:layout_marginEnd="5dp"
-            android:drawableStart="@drawable/ic_person"
+            android:drawableStart="@drawable/ic_person_blue"
             android:drawablePadding="7dp"
             />
 
@@ -110,6 +110,40 @@
 
         </RelativeLayout>
 
+
+            <RelativeLayout
+                android:id="@+id/relative_layout3"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/relative_layout2"            >
+
+                <EditText
+                    android:id="@+id/user_info_edit_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="14dp"
+                    android:text="about me "
+                    android:textColor="#000000"
+                    android:textSize="18sp"
+                    android:layout_toStartOf="@+id/user_info_edit_icon"
+                    android:layout_marginEnd="5dp"
+                    android:drawableStart="@drawable/ic_info_icon"
+                    android:drawablePadding="7dp"
+                    />
+
+
+                <ImageView
+                    android:id="@+id/user_info_edit_icon"
+                    android:layout_width="26dp"
+                    android:layout_height="26dp"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    android:layout_marginEnd="10dp"
+                    android:src="@drawable/ic_edit_icon"
+                    />
+
+            </RelativeLayout>
+
             <ProgressBar
                 android:id="@+id/progress_bar"
                 android:layout_width="60dp"
@@ -132,7 +166,7 @@
         android:layout_marginTop="100dp"
         android:layout_marginBottom="50dp"
         android:textAllCaps="false"
-        android:background="@drawable/button_background_shape2"
+        android:background="@drawable/button_background_shape4"
         />
 
 

@@ -5,16 +5,10 @@
     android:layout_height="match_parent"
     tools:context=".Fragments.ChatFragment">
 
-
-    <TextView
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recycler_view"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Chat Fragment"
-        android:textSize="25sp"
-        android:textStyle="bold"
-        android:textAlignment="center"
-        android:layout_marginTop="200dp"
-        android:textColor="#ee00aa"
+        android:layout_height="match_parent"
         />
 
 </FrameLayout>

@@ -15,8 +15,8 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.nisith.smartchat.Model.Friend;
-import com.nisith.smartchat.Model.ValueEventListenerModel;
 import com.nisith.smartchat.Model.UserProfile;
+import com.nisith.smartchat.Model.ValueEventListenerModel;
 import com.nisith.smartchat.R;
 import com.squareup.picasso.Picasso;
 
@@ -27,21 +27,21 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import de.hdodenhof.circleimageview.CircleImageView;
 
-public class MyFriendFragmentRecyclerAdapter extends FirebaseRecyclerAdapter<Friend, MyFriendFragmentRecyclerAdapter.MyViewHolder> {
+public class MyChatsFragmentRecyclerAdapter extends FirebaseRecyclerAdapter<Friend, MyChatsFragmentRecyclerAdapter.MyViewHolder> {
 
-    public interface OnFriendFragmentViewsClickListener {
-        void onFriendViewsClick(View view, String friendUid);
+    public interface OnChatsFragmentViewsClickListener {
+        void onViewClick(View view, String friendUid);
     }
 
     private String currentUser;
     private DatabaseReference userDatabaseRef;
-    private OnFriendFragmentViewsClickListener friendCardViewsClickListener;
+    private OnChatsFragmentViewsClickListener chatsCardViewsClickListener;
     private List<ValueEventListenerModel> removeListenerList;
 
-    public MyFriendFragmentRecyclerAdapter(@NonNull FirebaseRecyclerOptions<Friend> options, OnFriendFragmentViewsClickListener friendCardViewsClickListener) {
+    public MyChatsFragmentRecyclerAdapter(@NonNull FirebaseRecyclerOptions<Friend> options, OnChatsFragmentViewsClickListener chatsCardViewsClickListener) {
 
         super(options);
-        this.friendCardViewsClickListener = friendCardViewsClickListener;
+        this.chatsCardViewsClickListener = chatsCardViewsClickListener;
         userDatabaseRef = FirebaseDatabase.getInstance().getReference().child("users");
         currentUser = FirebaseAuth.getInstance().getCurrentUser().getUid();
         this.removeListenerList = new ArrayList<>();
@@ -50,7 +50,7 @@ public class MyFriendFragmentRecyclerAdapter extends FirebaseRecyclerAdapter<Fri
     @NonNull
     @Override
     public MyViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.single_row_appearence_for_friend_layout,parent,false);
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.single_row_appearence_for_chat_layout,parent,false);
         return new MyViewHolder(view);
     }
 
@@ -65,9 +65,8 @@ public class MyFriendFragmentRecyclerAdapter extends FirebaseRecyclerAdapter<Fri
                                 UserProfile userProfile = snapshot.getValue(UserProfile.class);
                                 if (userProfile != null) {
                                     String userName = userProfile.getUserName();
-                                    String userStatus = userProfile.getUserStatus();
                                     holder.profileNameTextView.setText(userName);
-                                    holder.userStatusTextView.setText(userStatus);
+                                    holder.lastMessageTextView.setText("Hello there");
                                     String imageUrl = userProfile.getProfileImage();
                                     if (!imageUrl.equalsIgnoreCase("default")) {
                                         Picasso.get().load(imageUrl).placeholder(R.drawable.user_icon).into(holder.profileImageView);
@@ -99,27 +98,28 @@ public class MyFriendFragmentRecyclerAdapter extends FirebaseRecyclerAdapter<Fri
 
     class MyViewHolder extends RecyclerView.ViewHolder{
         CircleImageView profileImageView;
-        TextView profileNameTextView, userStatusTextView;
+        TextView profileNameTextView, lastMessageTextView, lastSeenTextView;
         ImageView onlineStateImageView;
         public MyViewHolder(@NonNull View itemView) {
             super(itemView);
             profileImageView = itemView.findViewById(R.id.profile_image_view);
             profileNameTextView = itemView.findViewById(R.id.user_name_text_view);
-            userStatusTextView = itemView.findViewById(R.id.user_status_text_view);
+            lastMessageTextView = itemView.findViewById(R.id.last_message_text_view);
+            lastSeenTextView = itemView.findViewById(R.id.last_seen_text_view);
             onlineStateImageView = itemView.findViewById(R.id.online_state_image_view);
 
             //Click Listeners
             profileImageView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    friendCardViewsClickListener.onFriendViewsClick(view, getRef(getAbsoluteAdapterPosition()).getKey());
+                    chatsCardViewsClickListener.onViewClick(view, getRef(getAbsoluteAdapterPosition()).getKey());
                 }
             });
 
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    friendCardViewsClickListener.onFriendViewsClick(view, getRef(getAbsoluteAdapterPosition()).getKey());
+                    chatsCardViewsClickListener.onViewClick(view, getRef(getAbsoluteAdapterPosition()).getKey());
                 }
             });
 

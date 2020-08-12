@@ -41,7 +41,7 @@ public class ImageClickDialog extends DialogFragment {
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
                         if (snapshot.exists()){
                             UserProfile userProfile = snapshot.getValue(UserProfile.class);
-                            if (userProfile != null){
+                            if (userProfile != null && userNameTextView != null){
                                 userName = userProfile.getUserName();
                                 userNameTextView.setText(userName);
                                 profileImageUrl = userProfile.getProfileImage();

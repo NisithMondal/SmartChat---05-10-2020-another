@@ -1,6 +1,5 @@
 package com.nisith.smartchat.Fragments;
 
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 
@@ -12,7 +11,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
 import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.google.firebase.auth.FirebaseAuth;
@@ -20,7 +18,6 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.nisith.smartchat.Adapters.MyFriendFragmentRecyclerAdapter;
-import com.nisith.smartchat.Adapters.MyFriendRequestFragmentRecyclerAdapter;
 import com.nisith.smartchat.Constant;
 import com.nisith.smartchat.DialogBox.FriendImageClickDialog;
 import com.nisith.smartchat.FriendsProfileActivity;
@@ -80,6 +77,7 @@ public class FriendsFragment extends Fragment implements MyFriendFragmentRecycle
     public void onStop() {
         super.onStop();
         if (adapter != null){
+            adapter.removeValueEventListener(); //To remove all value event listener
             adapter.stopListening();
         }
     }
