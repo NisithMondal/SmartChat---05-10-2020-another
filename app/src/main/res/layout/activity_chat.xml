@@ -5,7 +5,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ChatActivity">
+    tools:context=".ChatActivity"
+    android:background="#F3EDEBEB"
+    >
 
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/app_toolbar"
@@ -72,7 +74,72 @@
         android:layout_height="match_parent"
         android:scrollbars="vertical"
         android:layout_below="@+id/app_toolbar"
+        android:layout_above="@+id/card_view"
         />
+
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/card_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="5dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:background="@drawable/chat_message_layout_background_style"
+        app:cardElevation="10dp"
+        app:cardCornerRadius="20dp"
+        >
+
+    <RelativeLayout
+        android:id="@+id/relative_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        >
+
+
+        <ImageView
+            android:id="@+id/emojy_image_view"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@drawable/ic_emojy"
+            android:layout_centerVertical="true"
+            android:layout_marginStart="6dp"
+            android:layout_marginEnd="4dp"
+
+            />
+
+        <EditText
+            android:id="@+id/message_edit_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="4dp"
+            android:layout_marginTop="3dp"
+            android:layout_marginBottom="3dp"
+            android:hint="Write Message"
+            android:padding="15dp"
+            android:layout_toEndOf="@+id/emojy_image_view"
+            android:layout_toStartOf="@+id/send_image_view"
+            android:layout_centerVertical="true"
+            android:background="@drawable/chat_message_edit_text_background_style"
+            />
+
+
+        <ImageView
+            android:id="@+id/send_image_view"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_alignParentEnd="true"
+            android:src="@drawable/ic_send_icon"
+            android:layout_centerVertical="true"
+            android:layout_marginEnd="4dp"
+            />
+
+
+
+    </RelativeLayout>
+
+    </androidx.cardview.widget.CardView>
 
 
 </RelativeLayout>

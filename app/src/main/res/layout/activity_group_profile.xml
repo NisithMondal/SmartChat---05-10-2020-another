@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".GroupProfileActivity">
+
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scrollbars="vertical"
+        >
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <ImageView
+                android:id="@+id/background_image_view"
+                android:layout_width="match_parent"
+                android:layout_height="280dp"
+                android:scaleType="fitXY"
+                android:background="@drawable/wallpaper2"
+                />
+
+
+            <androidx.appcompat.widget.Toolbar
+                android:id="@+id/app_toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="55dp"
+                android:theme="@style/ThemeOverlay.AppCompat.Dark"
+                app:popupTheme="@style/Theme.AppCompat.Light"
+                />
+
+            <de.hdodenhof.circleimageview.CircleImageView
+                android:id="@+id/group_profile_image_view"
+                android:layout_width="180dp"
+                android:layout_height="180dp"
+                android:src="@drawable/group_icon"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="150dp"
+                app:civ_border_color="#0097A7"
+                app:civ_border_width="3dp"
+                />
+
+            <TextView
+                android:id="@+id/group_name_text_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="20sp"
+                android:textAlignment="center"
+                android:layout_below="@+id/group_profile_image_view"
+                android:layout_marginTop="10dp"
+                android:textStyle="bold"
+                android:textColor="#04646E"
+                android:text="Friends Group"
+                />
+
+            <TextView
+                android:id="@+id/total_group_friends_text_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="18sp"
+                android:layout_below="@+id/group_name_text_view"
+                android:text="Total 10 friends in this group"
+                android:layout_marginTop="10dp"
+                android:textStyle="bold"
+                android:textColor="#393A39"
+                android:paddingStart="10dp"
+                android:paddingTop="10dp"
+                android:paddingBottom="5dp"
+                />
+
+
+
+
+
+            <TextView
+                android:id="@+id/about_text_heading"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="16sp"
+                android:layout_below="@+id/total_group_friends_text_view"
+                android:text="About this Group :"
+                android:layout_marginTop="10dp"
+                android:textStyle="bold"
+                android:textColor="#393A39"
+                android:paddingStart="4dp"
+                android:paddingTop="10dp"
+                android:paddingBottom="5dp"
+                android:drawableStart="@drawable/ic_about_icon"
+                android:drawablePadding="5dp"
+                />
+
+            <TextView
+                android:id="@+id/about_group_text_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="16sp"
+                android:layout_below="@+id/about_text_heading"
+                android:text="I am 20 Years old a beautiful girl. I am studing in Haldia Institute of Technology in third year."
+                android:layout_marginTop="0dp"
+                android:textStyle="normal"
+                android:textColor="#4B4E4B"
+                android:paddingStart="35dp"
+                android:paddingEnd="15dp"
+                />
+
+            <TextView
+                android:id="@+id/display_message_text_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/about_group_text_view"
+                android:text="You are Friends now"
+                android:textSize="18sp"
+                android:textColor="#388E3C"
+                android:textAlignment="center"
+                android:layout_marginTop="35dp"
+                android:textStyle="bold"
+                />
+
+
+
+            <Button
+                android:id="@+id/invite_friend_button"
+                android:layout_width="180dp"
+                android:layout_height="wrap_content"
+                android:background="@drawable/button_background_shape1"
+                android:text="Invite Friends"
+                android:textColor="#ffffff"
+                android:padding="14dp"
+                android:layout_centerHorizontal="true"
+                android:layout_below="@+id/about_group_text_view"
+                android:textSize="16sp"
+                android:layout_marginTop="20dp"
+                android:textAllCaps="false"
+                android:drawableStart="@drawable/ic_add_friend_icon"
+                />
+
+            <Button
+                android:id="@+id/all_group_friends_button"
+                android:layout_width="180dp"
+                android:layout_height="wrap_content"
+                android:background="@drawable/button_background_shape"
+                android:text="Group Friends"
+                android:textColor="#ffffff"
+                android:padding="14dp"
+                android:layout_centerHorizontal="true"
+                android:layout_below="@+id/invite_friend_button"
+                android:textSize="16sp"
+                android:textAllCaps="false"
+                android:layout_marginTop="20dp"
+                android:layout_marginBottom="80dp"
+                android:visibility="visible"
+                android:drawableStart="@drawable/ic_group_icon_white"
+                />
+
+        </RelativeLayout>
+    </ScrollView>
+
+</RelativeLayout>

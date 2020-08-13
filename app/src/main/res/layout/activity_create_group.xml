@@ -1,9 +1,106 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".CreateGroupActivity">
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <include
+        android:id="@+id/app_toolbar"
+        layout="@layout/app_toolbar" />
+
+    <ProgressBar
+        android:id="@+id/progress_bar"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="250dp"
+        />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/app_toolbar"
+        android:scrollbars="vertical"
+        >
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+
+            <de.hdodenhof.circleimageview.CircleImageView
+                android:id="@+id/group_profile_image_view"
+                android:layout_width="170dp"
+                android:layout_height="170dp"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="15dp"
+                android:src="@drawable/group_icon"
+                app:civ_border_color="#9A9999"
+                app:civ_border_width="2dp"
+                />
+
+
+            <EditText
+                android:id="@+id/group_name_edit_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/group_profile_image_view"
+                android:layout_marginStart="50dp"
+                android:layout_marginTop="100dp"
+                android:layout_marginEnd="50dp"
+                android:background="@drawable/edit_text_background"
+                android:drawableStart="@drawable/ic_group_icon1"
+                android:drawablePadding="7dp"
+                android:hint="Enter Group Name"
+                android:inputType="text"
+                android:padding="10dp"
+                android:textAlignment="center"
+                android:textSize="18sp" />
+
+            <EditText
+                android:id="@+id/about_group_edit_text"
+                android:layout_width="300dp"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/group_name_edit_text"
+                android:layout_marginTop="30dp"
+                android:background="@drawable/edit_text_background"
+                android:drawableStart="@drawable/ic_info_icon_white"
+                android:drawablePadding="7dp"
+                android:hint="About this Group"
+                android:layout_marginStart="50dp"
+                android:layout_marginEnd="50dp"
+                android:inputType="text"
+                android:padding="10dp"
+                android:textAlignment="center"
+                android:textSize="18sp"
+                android:maxLength="200"
+                />
+
+
+
+
+            <Button
+                android:id="@+id/create_group_button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/about_group_edit_text"
+                android:layout_centerHorizontal="true"
+                android:layout_marginStart="50dp"
+                android:layout_marginTop="40dp"
+                android:layout_marginEnd="50dp"
+                android:background="@drawable/button_background_shape"
+                android:text="Create Group"
+                android:textAllCaps="false"
+                android:textColor="@android:color/white"
+                android:textSize="20sp"
+                />
+
+
+        </RelativeLayout>
+
+    </ScrollView>
+
+</RelativeLayout>

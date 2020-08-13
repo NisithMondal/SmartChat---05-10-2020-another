@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/card_view1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:cardCornerRadius="10dp"
+        app:cardElevation="4dp"
+        app:cardBackgroundColor="#AED8D3"
+        android:layout_marginTop="18dp"
+        android:layout_centerHorizontal="true"
+
+        >
+        <TextView
+            android:id="@+id/message_date_text_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="8dp"
+            android:text="13/08/2020"
+            android:textColor="#000000"
+            android:textSize="15sp"
+            android:visibility="visible"
+            />
+
+    </androidx.cardview.widget.CardView>
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/card_view2"
+        android:layout_below="@+id/card_view1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:cardCornerRadius="20dp"
+        app:cardElevation="8dp"
+        app:cardBackgroundColor="#ABF3AE"
+        android:layout_marginStart="18dp"
+        android:layout_marginTop="18dp"
+
+        >
+        <TextView
+            android:id="@+id/receive_message_text_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="12dp"
+            android:text="How is the weather today??"
+            android:textColor="#000000"
+            android:maxWidth="280dp"
+            android:textSize="16sp"
+            android:visibility="visible"
+            />
+
+    </androidx.cardview.widget.CardView>
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/card_view3"
+        android:layout_below="@+id/card_view2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:cardCornerRadius="20dp"
+        app:cardElevation="8dp"
+        app:cardBackgroundColor="#DFE6E0"
+        android:layout_marginEnd="13dp"
+        android:layout_alignParentEnd="true"
+        android:layout_marginTop="18dp"
+        android:layout_marginBottom="8dp"
+        >
+        <TextView
+            android:id="@+id/send_message_text_view"
+            android:layout_width="280dp"
+            android:layout_height="wrap_content"
+            android:text="I am fine and same to you. What is weather today!!!"
+            android:padding="13dp"
+            android:textColor="#000000"
+            android:textSize="16sp"
+            android:visibility="visible"
+            />
+
+    </androidx.cardview.widget.CardView>
+
+
+</RelativeLayout>

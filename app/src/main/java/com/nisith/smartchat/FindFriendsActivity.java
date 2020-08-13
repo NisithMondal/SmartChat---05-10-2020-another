@@ -10,6 +10,8 @@ import android.app.DownloadManager;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.View;
 import android.widget.Adapter;
 import android.widget.ProgressBar;
@@ -73,6 +75,17 @@ public class FindFriendsActivity extends AppCompatActivity implements MyFindFrie
 
 
     @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        super.onCreateOptionsMenu(menu);
+        MenuInflater menuInflater = getMenuInflater();
+        menuInflater.inflate(R.menu.find_friends_menu,menu);
+        return true;
+    }
+
+
+
+
+    @Override
     protected void onStart() {
         super.onStart();
         if (findFriendsPaginationAdapter != null){
@@ -100,6 +113,7 @@ public class FindFriendsActivity extends AppCompatActivity implements MyFindFrie
             rootDatabaseRef.keepSynced(false);
         }
     }
+
 
 
     private void findFriendsFromDatabase(){
