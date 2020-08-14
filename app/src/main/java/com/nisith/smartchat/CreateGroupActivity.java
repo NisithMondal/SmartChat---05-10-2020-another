@@ -23,15 +23,15 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
-import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
-import com.nisith.smartchat.Model.FriendsGroup;
+import com.nisith.smartchat.Model.Friend;
+import com.nisith.smartchat.Model.GroupProfile;
 import com.squareup.picasso.Picasso;
 import com.theartofdev.edmodo.cropper.CropImage;
 import com.theartofdev.edmodo.cropper.CropImageView;
@@ -54,8 +54,10 @@ public class CreateGroupActivity extends AppCompatActivity {
 
     //Firebase
     private DatabaseReference groupDatabaseRef;
+    private DatabaseReference rootDatabaseRef, groupFriendsDatabaseRef, friendsDatabaseRef;
     private StorageReference rootStorageReference;
     private byte[] groupProfileImageByteArray;
+    private String currentUserUid;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,7 +68,11 @@ public class CreateGroupActivity extends AppCompatActivity {
         groupProfileImageView.setOnClickListener(new MyClickListener());
         createGroupButton.setOnClickListener(new MyClickListener());
         //Firebase
+        currentUserUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
         groupDatabaseRef = FirebaseDatabase.getInstance().getReference().child("groups");
+        rootDatabaseRef = FirebaseDatabase.getInstance().getReference();
+        friendsDatabaseRef = FirebaseDatabase.getInstance().getReference().child("friends");
+        groupFriendsDatabaseRef = FirebaseDatabase.getInstance().getReference().child("groups_friends");
         rootStorageReference = FirebaseStorage.getInstance().getReference().child("all_user_picture").child("groups_profile_image");
     }
 
@@ -95,7 +101,6 @@ public class CreateGroupActivity extends AppCompatActivity {
 
                 case R.id.create_group_button:
                     createGroup();
-                    break;
 
             }
 
@@ -167,18 +172,19 @@ public class CreateGroupActivity extends AppCompatActivity {
         final String groupKey = groupDatabaseRef.push().getKey();
         if (groupKey != null) {
             progressBar.setVisibility(View.VISIBLE);
-            FriendsGroup friendsGroup = new FriendsGroup(groupName,aboutGroup,"default");
-            groupDatabaseRef.child(groupKey).setValue(friendsGroup)
+            createGroupButton.setEnabled(false);
+            GroupProfile groupProfile = new GroupProfile(groupName, aboutGroup,1,"default");
+            groupDatabaseRef.child(groupKey).setValue(groupProfile)
                     .addOnCompleteListener(new OnCompleteListener<Void>() {
                         @Override
                         public void onComplete(@NonNull Task<Void> task) {
                             if (task.isSuccessful()) {
-                                //group created successfully
-                               //upload group image icon
-                                uploadGroupProfileImage(groupKey);
+                             //add this current user to group_friends node
+                                handelFriendOperation(groupKey);
                             }else {
                                 //group not created successfully
                                 progressBar.setVisibility(View.GONE);
+                                createGroupButton.setEnabled(true);
                                 Toast.makeText(CreateGroupActivity.this, Objects.requireNonNull(task.getException()).getMessage(), Toast.LENGTH_SHORT).show();
                             }
                         }
@@ -188,6 +194,50 @@ public class CreateGroupActivity extends AppCompatActivity {
             //if push key is not generated
             Toast.makeText(this, "Group not create. Try again...", Toast.LENGTH_SHORT).show();
         }
+    }
+
+
+    private void handelFriendOperation(final String groupKey){
+        //This method add current user to the specified group's 'group_friends' node and this group is added the current user's
+        //'friends' node also ...
+        Friend friend = new Friend("now", Constant.GROUP_FRIEND);
+        Map<String, Object> addFriendMap = new HashMap<>();
+        addFriendMap.put("friends"+"/"+currentUserUid+"/"+groupKey,friend);  //group is added current user friend node
+        addFriendMap.put("group_friends"+"/"+groupKey+"/"+currentUserUid,friend);// the current user is added to the group_friends node
+        rootDatabaseRef.updateChildren(addFriendMap, new DatabaseReference.CompletionListener() {
+            @Override
+            public void onComplete(@Nullable DatabaseError error, @NonNull DatabaseReference ref) {
+                if (error == null){
+                    //group created successfully
+                    //upload group image icon
+                    uploadGroupProfileImage(groupKey);
+
+                }else {
+                    //group not created successfully
+                    progressBar.setVisibility(View.GONE);
+                    createGroupButton.setEnabled(true);
+                    Toast.makeText(CreateGroupActivity.this, "Group not create. Try again...", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+
+//        groupFriendsDatabaseRef.child(groupKey).child(currentUserUid).setValue(map)
+//                .addOnCompleteListener(new OnCompleteListener<Void>() {
+//                    @Override
+//                    public void onComplete(@NonNull Task<Void> task) {
+//                        if (task.isSuccessful()){
+//                            //group created successfully
+//                            //upload group image icon
+//                            uploadGroupProfileImage(groupKey);
+//
+//                        }else {
+//                            //group not created successfully
+//                            progressBar.setVisibility(View.GONE);
+//                            createGroupButton.setEnabled(true);
+//                            Toast.makeText(CreateGroupActivity.this, "Group not create. Try again...", Toast.LENGTH_SHORT).show();
+//                        }
+//                    }
+//                });
     }
 
 
@@ -204,6 +254,7 @@ public class CreateGroupActivity extends AppCompatActivity {
                         @Override
                         public void onComplete(@NonNull Task<Uri> task) {
                             progressBar.setVisibility(View.GONE);
+                            createGroupButton.setEnabled(true);
                             Uri imageUri = task.getResult();
                             if (imageUri != null){
                                 String imageUrl = imageUri.toString();
@@ -213,7 +264,7 @@ public class CreateGroupActivity extends AppCompatActivity {
                             }
                             Toast.makeText(CreateGroupActivity.this, "Group created successfully", Toast.LENGTH_SHORT).show();
                             //Open group profile Activity
-                            openGroupProfileActivity();
+                            openGroupProfileActivity(groupKey);
                             finish();
                         }
                     });
@@ -224,25 +275,31 @@ public class CreateGroupActivity extends AppCompatActivity {
                         public void onFailure(@NonNull Exception e) {
                             //only image not upload so,
                             progressBar.setVisibility(View.GONE);
+                            createGroupButton.setEnabled(true);
                             Toast.makeText(CreateGroupActivity.this, "Group created successfully", Toast.LENGTH_SHORT).show();
                             //Open group profile Activity
-                            openGroupProfileActivity();
+                            openGroupProfileActivity(groupKey);
                             finish();
                         }
                     });
         }else {
             // if group profile icon is default. Means user not selected any icon
             progressBar.setVisibility(View.GONE);
+            createGroupButton.setEnabled(true);
             Toast.makeText(CreateGroupActivity.this, "Group created successfully", Toast.LENGTH_SHORT).show();
             //Open group profile Activity
-            openGroupProfileActivity();
+            openGroupProfileActivity(groupKey);
             finish();
         }
     }
 
 
-    private void openGroupProfileActivity(){
+
+
+
+    private void openGroupProfileActivity(String groupKey){
         Intent intent = new Intent(CreateGroupActivity.this, GroupProfileActivity.class);
+        intent.putExtra(Constant.GROUP_KEY, groupKey);
         startActivity(intent);
     }
 

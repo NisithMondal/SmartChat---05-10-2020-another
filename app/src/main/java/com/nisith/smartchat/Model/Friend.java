@@ -2,18 +2,24 @@ package com.nisith.smartchat.Model;
 
 public class Friend {
 
-    private String time;
+    private String friendsType; //Means single-friend or group-friend
+    private String timeStamp;
 
     public Friend(){
 
     }
 
-    public Friend(String time) {
-        this.time = time;
+    public Friend(String timeStamp, String friendsType) {
+        this.timeStamp = timeStamp;
+        this.friendsType = friendsType;
     }
 
-    public String getTime() {
-        return time;
+    public String getFriendsType() {
+        return friendsType;
+    }
+
+    public String getTimeStamp() {
+        return timeStamp;
     }
 }
 

@@ -24,6 +24,7 @@ import com.nisith.smartchat.Adapters.MyFriendRequestFragmentRecyclerAdapter;
 import com.nisith.smartchat.Constant;
 import com.nisith.smartchat.DialogBox.ImageClickDialog;
 import com.nisith.smartchat.FriendsProfileActivity;
+import com.nisith.smartchat.Model.Friend;
 import com.nisith.smartchat.Model.FriendRequest;
 import com.nisith.smartchat.R;
 
@@ -200,11 +201,11 @@ public class FriendRequestFragment extends Fragment implements MyFriendRequestFr
             public void onComplete(@Nullable DatabaseError error, @NonNull DatabaseReference ref) {
                 if (error == null){
                     //all ok
-                    Map<String, Object> map1 = new HashMap<>();
-                    map1.put("time","now");
+//                    Map<String, Object> map1 = new HashMap<>();
+                    Friend friend = new Friend("now", Constant.SINGLE_FRIEND);
                     Map<String, Object> friendsMap = new HashMap<>();
-                    friendsMap.put(requestSenderUid+"/"+requestReceiverUid,map1);
-                    friendsMap.put(requestReceiverUid+"/"+requestSenderUid,map1);
+                    friendsMap.put(requestSenderUid+"/"+requestReceiverUid,friend);
+                    friendsMap.put(requestReceiverUid+"/"+requestSenderUid,friend);
                     friendsDatabaseRef.updateChildren(friendsMap);
                 }
             }

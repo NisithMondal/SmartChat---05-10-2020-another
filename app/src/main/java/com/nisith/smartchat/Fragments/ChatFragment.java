@@ -88,23 +88,23 @@ public class ChatFragment extends Fragment implements MyChatsFragmentRecyclerAda
 
 
     @Override
-    public void onViewClick(View view, String friendUid) {
+    public void onViewClick(View view, String key) {
         //called when each row of Friend Fragment is clicked
         switch (view.getId()){
             case R.id.profile_image_view:
-                showImageDialog(friendUid);
+                showImageDialog(key);  //key may be friend key or group key
                 break;
 
             case R.id.root_view:
                 //Open Chat Activity
                 Intent intent = new Intent(getContext(), ChatActivity.class);
-                intent.putExtra(Constant.FRIEND_UID, friendUid);
+                intent.putExtra(Constant.KEY, key);  //key may be friend key or group key
                 startActivity(intent);
         }
     }
 
-    private void showImageDialog(String friendUid){
-        FriendImageClickDialog dialog = new FriendImageClickDialog(friendUid);
+    private void showImageDialog(String key){
+        FriendImageClickDialog dialog = new FriendImageClickDialog(key);
         dialog.show(getActivity().getSupportFragmentManager(),"smart chat");
     }
 

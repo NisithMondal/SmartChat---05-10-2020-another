@@ -1,19 +1,22 @@
 package com.nisith.smartchat.Model;
 
-public class FriendsGroup {
+public class GroupProfile {
     private String groupName;
     private String aboutGroup;
+    private int totalGroupFriends;
     private String groupProfileImage;
 
-    public FriendsGroup(){
+    public GroupProfile(){
 
     }
 
-    public FriendsGroup(String groupName, String aboutGroup, String groupProfileImage) {
+    public GroupProfile(String groupName, String aboutGroup, int totalGroupFriends, String groupProfileImage) {
         this.groupName = groupName;
         this.aboutGroup = aboutGroup;
+        this.totalGroupFriends = totalGroupFriends;
         this.groupProfileImage = groupProfileImage;
     }
+
 
     public String getGroupName() {
         return groupName;
@@ -21,6 +24,10 @@ public class FriendsGroup {
 
     public String getAboutGroup() {
         return aboutGroup;
+    }
+
+    public int getTotalGroupFriends() {
+        return totalGroupFriends;
     }
 
     public String getGroupProfileImage() {

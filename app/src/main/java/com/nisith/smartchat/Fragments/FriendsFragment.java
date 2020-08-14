@@ -55,7 +55,7 @@ public class FriendsFragment extends Fragment implements MyFriendFragmentRecycle
     }
 
     private void setUpRecyclerViewWithAdapter(){
-        Query query =friendsDatabaseRef.orderByKey();
+        Query query =friendsDatabaseRef.orderByChild("friendsType").equalTo(Constant.SINGLE_FRIEND);
         FirebaseRecyclerOptions<Friend> recyclerOptions = new FirebaseRecyclerOptions.Builder<Friend>()
                 .setQuery(query, Friend.class)
                 .build();

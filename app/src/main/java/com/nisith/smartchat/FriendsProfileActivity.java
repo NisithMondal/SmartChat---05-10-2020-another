@@ -21,6 +21,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.nisith.smartchat.Model.Friend;
 import com.nisith.smartchat.Model.FriendRequest;
 import com.nisith.smartchat.Model.UserProfile;
 import com.squareup.picasso.Picasso;
@@ -256,11 +257,11 @@ import java.util.Map;
             public void onComplete(@Nullable DatabaseError error, @NonNull DatabaseReference ref) {
                 if (error == null){
                     //all ok
-                    Map<String, Object> map1 = new HashMap<>();
-                    map1.put("time","now");
+//                    Map<String, Object> map1 = new HashMap<>();
+                    Friend friend = new Friend("now", Constant.SINGLE_FRIEND);
                     Map<String, Object> friendsMap = new HashMap<>();
-                    friendsMap.put(requestSenderUid+"/"+requestReceiverUid,map1);
-                    friendsMap.put(requestReceiverUid+"/"+requestSenderUid,map1);
+                    friendsMap.put(requestSenderUid+"/"+requestReceiverUid,friend);
+                    friendsMap.put(requestReceiverUid+"/"+requestSenderUid,friend);
                     friendsDatabaseRef.updateChildren(friendsMap);
 
                 }

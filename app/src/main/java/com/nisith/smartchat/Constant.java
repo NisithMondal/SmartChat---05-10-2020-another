@@ -14,4 +14,14 @@ public class Constant {
     public static final String CANCEL_REQUEST = "cancel_request";
     public static final String ACCEPT_REQUEST = "accept_request";
     public static final String DECLINE_REQUEST = "decline_request";
+    public static final String SINGLE_FRIEND = "single_friend";
+    public static final String GROUP_FRIEND = "group_friend";
+    public static final String KEY = "key";
+    //Constants for groups
+    public static final String GROUP_KEY = "group_key";
+    public static final String GROUP_NAME = "group_NAME";
+    public static final String GROUP_PROFILE_IMAGE_URL = "group_profile_image_url";
+
+
+
 }
