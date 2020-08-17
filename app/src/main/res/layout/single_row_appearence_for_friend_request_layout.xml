@@ -14,6 +14,8 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
+
+
         <de.hdodenhof.circleimageview.CircleImageView
             android:id="@+id/profile_image_view"
             android:layout_width="80dp"
@@ -24,11 +26,22 @@
             />
 
         <TextView
+            android:id="@+id/group_request_text_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Group Request"
+            android:textSize="15sp"
+            android:textColor="#ee00aa"
+            android:layout_margin="5dp"
+            android:layout_toEndOf="@+id/profile_image_view"
+            />
+
+        <TextView
             android:id="@+id/user_name_text_view"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_toEndOf="@+id/profile_image_view"
-            android:layout_marginTop="22dp"
+            android:layout_marginTop="25dp"
             android:textColor="#000000"
             android:text="Gia Karter"
             android:textSize="16sp"
@@ -44,7 +57,7 @@
             android:id="@+id/request_type_text_view"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="22dp"
+            android:layout_marginTop="25dp"
             android:textColor="#454343"
             android:text="Request Send"
             android:textSize="16sp"
@@ -53,6 +66,8 @@
             android:textStyle="normal"
             android:drawableEnd="@drawable/ic_arrow_up_icon"
             />
+
+
 
         <Button
             android:id="@+id/accept_request_button"
@@ -73,16 +88,17 @@
 
         <Button
             android:id="@+id/decline_request_button"
-            android:layout_width="wrap_content"
+            android:layout_width="120dp"
             android:layout_height="35dp"
             android:background="@drawable/button_background_shape4"
-            android:text="Decline"
+            android:text="Decline request"
             android:textAllCaps="false"
             android:layout_marginTop="10dp"
             android:layout_below="@+id/request_type_text_view"
             android:textSize="15sp"
             android:textColor="#ffffff"
-            android:layout_toEndOf="@+id/user_name_text_view"
+            android:layout_alignParentEnd="true"
+            android:layout_marginEnd="10dp"
             android:padding="8dp"
             />
 

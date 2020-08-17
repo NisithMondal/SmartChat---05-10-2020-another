@@ -37,9 +37,11 @@ public class FindFriendsActivity extends AppCompatActivity implements MyFindFrie
     private RecyclerView recyclerView;
     private ProgressBar progressBar;
     private MyFindFriendsPaginationAdapter findFriendsPaginationAdapter;
+    private String searchFriendsType;
     //Firebase
     private DatabaseReference rootDatabaseRef;
     private ValueEventListener valueEventListener;
+    private String groupKey; //this is required to open FriendsProfileActivityForGroup
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,6 +59,11 @@ public class FindFriendsActivity extends AppCompatActivity implements MyFindFrie
             }
         });
         progressBar.setVisibility(View.GONE);
+        Intent intent = getIntent();
+        searchFriendsType = intent.getStringExtra(Constant.SEARCH_FRIENDS_TYPE);
+        //for find friend for one to one chat groupKey will be null. But for find friend for group
+        // group key will not be null.
+        groupKey = intent.getStringExtra(Constant.GROUP_KEY);
         //Firebase
         rootDatabaseRef = FirebaseDatabase.getInstance().getReference().child("users");
         //To get Updated data from server
@@ -142,9 +149,20 @@ public class FindFriendsActivity extends AppCompatActivity implements MyFindFrie
                 break;
 
             case R.id.root_view:
-                Intent intent = new Intent(this,FriendsProfileActivity.class);
-                intent.putExtra(Constant.FRIEND_UID,userProfileId);
-                startActivity(intent);
+                if (searchFriendsType != null) {
+                    if (searchFriendsType.equals(Constant.SEARCH_FRIENDS_FOR_ONE_TO_ONE_FRIENDSHIP)) {
+                        //If current user finds friend for one to one chat
+                        Intent intent = new Intent(this, FriendsProfileActivity.class);
+                        intent.putExtra(Constant.FRIEND_UID, userProfileId);
+                        startActivity(intent);
+                    }else if (searchFriendsType.equals(Constant.SEARCH_FRIENDS_FOR_GROUP_FRIENDSHIP)){
+                        //If current user finds friend for group chat
+                        Intent intent = new Intent(this, FriendsProfileActivityForGroup.class);
+                        intent.putExtra(Constant.FRIEND_UID, userProfileId);
+                        intent.putExtra(Constant.GROUP_KEY, groupKey);
+                        startActivity(intent);
+                    }
+                }
 
         }
 

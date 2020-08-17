@@ -77,6 +77,9 @@ public class GroupProfileActivity extends AppCompatActivity {
             switch (view.getId()){
                 case R.id.invite_friend_button:
                     Intent intent = new Intent(GroupProfileActivity.this, FindFriendsActivity.class);
+                    //current user wants to search friends for a group
+                    intent.putExtra(Constant.SEARCH_FRIENDS_TYPE, Constant.SEARCH_FRIENDS_FOR_GROUP_FRIENDSHIP);
+                    intent.putExtra(Constant.GROUP_KEY, groupKey);
                     startActivity(intent);
                     break;
 

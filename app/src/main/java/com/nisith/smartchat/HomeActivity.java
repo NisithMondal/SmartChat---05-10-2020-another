@@ -95,7 +95,10 @@ public class HomeActivity extends AppCompatActivity {
         super.onOptionsItemSelected(item);
         switch (item.getItemId()){
             case R.id.find_friends:
-                startActivity(new Intent(HomeActivity.this,FindFriendsActivity.class));
+                Intent intent = new Intent(HomeActivity.this, FindFriendsActivity.class);
+                //current user wants to search friends for one to one chat
+                intent.putExtra(Constant.SEARCH_FRIENDS_TYPE, Constant.SEARCH_FRIENDS_FOR_ONE_TO_ONE_FRIENDSHIP);
+                startActivity(intent);
                 break;
 
             case R.id.Create_group:

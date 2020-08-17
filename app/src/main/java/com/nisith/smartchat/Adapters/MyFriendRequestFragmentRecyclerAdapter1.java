@@ -6,6 +6,8 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.firebase.ui.database.FirebaseRecyclerAdapter;
+import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -15,19 +17,15 @@ import com.google.firebase.database.ValueEventListener;
 import com.nisith.smartchat.Constant;
 import com.nisith.smartchat.Model.FriendRequest;
 import com.nisith.smartchat.Model.UserProfile;
-import com.nisith.smartchat.Model.ValueEventListenerModel;
 import com.nisith.smartchat.R;
 import com.squareup.picasso.Picasso;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.RecyclerView;
 import de.hdodenhof.circleimageview.CircleImageView;
 
-public class MyFriendRequestFragmentRecyclerAdapter extends RecyclerView.Adapter<MyFriendRequestFragmentRecyclerAdapter.MyViewHolder> {
+public class MyFriendRequestFragmentRecyclerAdapter1 extends FirebaseRecyclerAdapter<FriendRequest, MyFriendRequestFragmentRecyclerAdapter1.MyViewHolder> {
 
     public interface OnRequestButtonClickListener{
         void onRequestButtonClick(View view, FriendRequest friendRequest);
@@ -35,20 +33,19 @@ public class MyFriendRequestFragmentRecyclerAdapter extends RecyclerView.Adapter
 
     private OnRequestButtonClickListener requestButtonClickListener;
     private Fragment fragment;
-    private List<FriendRequest> friendRequestList;
-    private DatabaseReference userDatabaseRef;
+    private DatabaseReference userDatabaseRef, groupDatabaseRef;
     private String currentUserId;
-    private List<ValueEventListenerModel> removeListenerFromSingleFriendList, removeListenerFromGroupFriendList;
 
-    public MyFriendRequestFragmentRecyclerAdapter(Fragment fragment, List<FriendRequest> friendRequestList) {
+    public MyFriendRequestFragmentRecyclerAdapter1(@NonNull FirebaseRecyclerOptions<FriendRequest> options, Fragment fragment) {
+        super(options);
         this.fragment = fragment;
-        this.friendRequestList = friendRequestList;
-        this.requestButtonClickListener = (OnRequestButtonClickListener) fragment;
         userDatabaseRef = FirebaseDatabase.getInstance().getReference().child("users");
+        groupDatabaseRef = FirebaseDatabase.getInstance().getReference().child("groups");
+        this.requestButtonClickListener = (OnRequestButtonClickListener) fragment;
         currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
-        removeListenerFromSingleFriendList = new ArrayList<>();
-        removeListenerFromGroupFriendList = new ArrayList<>();
     }
+
+
 
     @NonNull
     @Override
@@ -58,8 +55,7 @@ public class MyFriendRequestFragmentRecyclerAdapter extends RecyclerView.Adapter
     }
 
     @Override
-    public void onBindViewHolder(@NonNull final MyViewHolder holder, int position) {
-        FriendRequest friendRequest = friendRequestList.get(position);
+    protected void onBindViewHolder(@NonNull final MyViewHolder holder, int position, @NonNull FriendRequest friendRequest) {
         if (friendRequest.getRequestType().equals(Constant.SEND_REQUEST)) {
             holder.requestTypeTextView.setText("Request Send");
             holder.requestTypeTextView.setCompoundDrawablesRelativeWithIntrinsicBounds(null,null, fragment.getActivity().getDrawable(R.drawable.ic_arrow_up_icon),null);
@@ -74,13 +70,12 @@ public class MyFriendRequestFragmentRecyclerAdapter extends RecyclerView.Adapter
             holder.declineRequestButton.setText("Decline");
             holder.declineRequestButton.setBackground(fragment.getActivity().getDrawable(R.drawable.button_background_shape3));
         }
-
         String uId = friendRequest.getSenderOrReceiverUid(); //key may be friend key or group key
         if (! friendRequest.isGroup()){
             //not a group friend request i.e. one to one chat friend request
             //here key is friend key
             holder.groupRequestTextView.setVisibility(View.INVISIBLE);
-            userDatabaseRef.child(uId).addListenerForSingleValueEvent(new ValueEventListener() {
+            userDatabaseRef.child(uId).addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
                     if (snapshot.exists()) {
@@ -104,13 +99,11 @@ public class MyFriendRequestFragmentRecyclerAdapter extends RecyclerView.Adapter
                 }
             });
 
-//            removeListenerFromSingleFriendList.add(new ValueEventListenerModel(uId, singleValueEventListener));
-
 
         }else {
             //Friend request for group
             holder.groupRequestTextView.setVisibility(View.VISIBLE);
-            userDatabaseRef.child(uId).addListenerForSingleValueEvent(new ValueEventListener() {
+            userDatabaseRef.child(uId).addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
                     if (snapshot.exists()) {
@@ -133,32 +126,9 @@ public class MyFriendRequestFragmentRecyclerAdapter extends RecyclerView.Adapter
 
                 }
             });
-//            removeListenerFromGroupFriendList.add(new ValueEventListenerModel(uId, groupValueEventListener));
         }
-    }
 
-    @Override
-    public int getItemCount() {
-        int totalItems = 0;
-        if (friendRequestList != null){
-            totalItems = friendRequestList.size();
-        }
-        return totalItems;
     }
-
-//
-//    public void removeValueEventListener(){
-//        //remove all value event listener from friends
-//        for (ValueEventListenerModel model : removeListenerFromSingleFriendList){
-//            userDatabaseRef.child(model.getKey()).removeEventListener(model.getValueEventListener());
-//        }
-//        removeListenerFromSingleFriendList.clear();
-//        //remove value event listeners from groups
-//        for (ValueEventListenerModel model : removeListenerFromGroupFriendList){
-//            userDatabaseRef.child(model.getKey()).removeEventListener(model.getValueEventListener());
-//        }
-//        removeListenerFromGroupFriendList.clear();
-//    }
 
 
     class MyViewHolder extends RecyclerView.ViewHolder{
@@ -188,8 +158,28 @@ public class MyFriendRequestFragmentRecyclerAdapter extends RecyclerView.Adapter
         }
         @Override
         public void onClick(final View view) {
-            FriendRequest friendRequest = friendRequestList.get(myViewHolder.getAbsoluteAdapterPosition());
-            requestButtonClickListener.onRequestButtonClick(view, friendRequest);
+          String key = getRef(myViewHolder.getAbsoluteAdapterPosition()).getKey();
+            FirebaseDatabase.getInstance().getReference().child("friend_requests").child(currentUserId).child(key)
+                  .addListenerForSingleValueEvent(new ValueEventListener() {
+                      @Override
+                      public void onDataChange(@NonNull DataSnapshot snapshot) {
+                          if (snapshot.exists()){
+                              FriendRequest friendRequest = snapshot.getValue(FriendRequest.class);
+                              if (friendRequest != null){
+                                  requestButtonClickListener.onRequestButtonClick(view, friendRequest);
+                              }
+                          }
+                      }
+
+                      @Override
+                      public void onCancelled(@NonNull DatabaseError error) {
+
+                      }
+                  });
+
         }
     }
+
+
+
 }

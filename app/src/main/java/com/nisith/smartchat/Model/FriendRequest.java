@@ -1,45 +1,46 @@
 package com.nisith.smartchat.Model;
 
-import java.util.Objects;
-
 public class FriendRequest {
     private String requestType;
-    //friend key is optional
-    private String friendKey;
-//    private String date;
+    //Note if i use 'isGroup' constant instead of 'group' or any other constant  is not get actual value.
+    // If i write 'isGroup' instead of 'group' firebase give me wrong answer. I don't know why it happend.
+    //But remember this thing...
+    private boolean group;
+    private String groupKey;// key may be friend key or group key
+    private  String senderOrReceiverUid;
+    private String date;
 
     public FriendRequest(){
 
     }
 
-    public FriendRequest(String requestType) {
+    public FriendRequest(String requestType, boolean isGroup, String groupKey, String senderOrReceiverUid, String date) {
         this.requestType = requestType;
-//        this.date = date;
-    }
-
-    public String getFriendKey() {
-        return friendKey;
-    }
-
-    public void setFriendKey(String friendKey) {
-        this.friendKey = friendKey;
+        this.group = isGroup;
+        this.groupKey = groupKey;
+        this.senderOrReceiverUid = senderOrReceiverUid;
+        this.date = date;
     }
 
     public String getRequestType() {
         return requestType;
     }
 
-    public void setRequestType(String requestType) {
-        this.requestType = requestType;
+    public boolean isGroup() {
+        return group;
     }
 
-//    public String getDate() {
-//        return date;
-//    }
+    public String getGroupKey() {
+        return groupKey;
+    }
 
-//    public void setDate(String date) {
-//        this.date = date;
-//    }
+    public String getSenderOrReceiverUid() {
+        return senderOrReceiverUid;
+    }
+
+    public String getDate() {
+        return date;
+    }
 
 
     @Override
@@ -47,7 +48,7 @@ public class FriendRequest {
         boolean result = false;
         if (object != null) {
             FriendRequest obj2 = (FriendRequest) object;
-            if (this.getFriendKey().equals(obj2.getFriendKey())){
+            if (this.getGroupKey().equals(obj2.getGroupKey())){
                 result = true;
             }
         }

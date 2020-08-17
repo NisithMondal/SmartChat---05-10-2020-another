@@ -45,7 +45,7 @@ import java.util.Map;
      private ValueEventListener valueEventListener;
      private String friendUid, currentUserId;
      private String requestSenderUid, requestReceiverUid;
-     private String requestStatus = Constant.NOT_FRIEND; //Type of request i.e. send_request, cancel_request, accept_request, decline_request
+     private String requestStatus = Constant.NOT_FRIEND; //Status of request i.e. send_request, cancel_request, accept_request, decline_request
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,7 +71,6 @@ import java.util.Map;
             requestSenderUid = FirebaseAuth.getInstance().getCurrentUser().getUid(); //means Current User Id
             currentUserId = requestSenderUid;
             requestReceiverUid = friendUid; //means Friend User Id
-            showFriendProfile();
             setFriendRequestButtonState();
         }
         friendRequestButton.setOnClickListener(new MyButtonClickListener());
@@ -117,6 +116,8 @@ import java.util.Map;
                           userStatusTextView.setText(friendStatus);
                           if (! profileImageUrl.equals("default")){
                               Picasso.get().load(profileImageUrl).placeholder(R.drawable.default_user_icon).into(profileImageView);
+                          }else {
+                              Picasso.get().load(R.drawable.default_user_icon).placeholder(R.drawable.default_user_icon).into(profileImageView);
                           }
                       }
                     }
@@ -146,10 +147,26 @@ import java.util.Map;
     }
 
 
+     @Override
+     protected void onStart() {
+         super.onStart();
+         if (databaseRef != null){
+             showFriendProfile();
+         }
+     }
 
 
 
-    private void setFriendRequestButtonState(){
+     @Override
+     protected void onStop() {
+         super.onStop();
+         if (databaseRef != null){
+             //remove value event listener
+             databaseRef.removeEventListener(valueEventListener);
+         }
+     }
+
+     private void setFriendRequestButtonState(){
         friendRequestDatabaseRef.child(requestSenderUid)
                 .addValueEventListener(new ValueEventListener() {
                     @Override
@@ -232,8 +249,9 @@ import java.util.Map;
         if (requestStatus.equals(Constant.NOT_FRIEND)) {
             //Current user wants to send friend request to this friend
             Map<String, Object> dataMap = new HashMap<>();
-            dataMap.put(requestSenderUid + "/" + requestReceiverUid, new FriendRequest(Constant.SEND_REQUEST));
-            dataMap.put(requestReceiverUid + "/" + requestSenderUid, new FriendRequest(Constant.RECEIVE_REQUEST));
+            //send request for single i.e. for one to one chat friendship
+            dataMap.put(requestSenderUid + "/" + requestReceiverUid, new FriendRequest(Constant.SEND_REQUEST, false, "",requestReceiverUid,"now"));
+            dataMap.put(requestReceiverUid + "/" + requestSenderUid, new FriendRequest(Constant.RECEIVE_REQUEST,false, "",requestSenderUid,"now"));
             requestStatus = Constant.SEND_REQUEST;
             friendRequestDatabaseRef.updateChildren(dataMap);
 
@@ -250,8 +268,8 @@ import java.util.Map;
 
      private void acceptFriendRequest(){
         Map<String, Object> map = new HashMap<>();
-        map.put(requestSenderUid+"/"+requestReceiverUid,new FriendRequest(Constant.FRIEND));
-        map.put(requestReceiverUid+"/"+requestSenderUid,new FriendRequest(Constant.FRIEND));
+        map.put(requestSenderUid+"/"+requestReceiverUid,new FriendRequest(Constant.FRIEND,false, "", requestReceiverUid,"now"));
+        map.put(requestReceiverUid+"/"+requestSenderUid,new FriendRequest(Constant.FRIEND, false, "",requestSenderUid,"now"));
         friendRequestDatabaseRef.updateChildren(map, new DatabaseReference.CompletionListener() {
             @Override
             public void onComplete(@Nullable DatabaseError error, @NonNull DatabaseReference ref) {
@@ -314,11 +332,4 @@ import java.util.Map;
 
 
 
-     @Override
-     protected void onStop() {
-         super.onStop();
-         if (databaseRef != null){
-             databaseRef.removeEventListener(valueEventListener);
-         }
-     }
  }
