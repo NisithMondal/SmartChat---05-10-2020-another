@@ -20,6 +20,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ServerValue;
 import com.nisith.smartchat.AcceptDeclineGroupRequestActivity;
 import com.nisith.smartchat.Adapters.MyFriendRequestFragmentRecyclerAdapter;
 import com.nisith.smartchat.Constant;
@@ -104,14 +105,16 @@ public class FriendRequestFragment extends Fragment implements MyFriendRequestFr
             //this is solved the problem of last item remove from list
             adapter.notifyDataSetChanged();
         }
-        childEventListener = currentUserFriendRequestDatabaseRef.addChildEventListener(new ChildEventListener() {
+        childEventListener = currentUserFriendRequestDatabaseRef.orderByChild("timeStamp")
+          .addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
                 FriendRequest friendRequest = snapshot.getValue(FriendRequest.class);
                 if (friendRequest != null){
                     String requestType = friendRequest.getRequestType();
                     if (! requestType.equals(Constant.FRIEND)){
-                        friendRequestList.add(friendRequest);
+                        //To get latest friend request at first of friend requests list
+                        friendRequestList.add(0,friendRequest);
                         adapter.notifyDataSetChanged();
                     }
                 }
@@ -127,6 +130,7 @@ public class FriendRequestFragment extends Fragment implements MyFriendRequestFr
                         adapter.notifyDataSetChanged();
                     }
                 }
+                Log.d("ABCD", "onChildChanged is called");
             }
 
             @Override
@@ -206,7 +210,6 @@ public class FriendRequestFragment extends Fragment implements MyFriendRequestFr
                     cancelFriendRequest(friendUid, groupKey, isRequestForGroup);
                 }else if (buttonCaption.equalsIgnoreCase("Cancel Request")){
                     cancelFriendRequest(friendUid, groupKey, isRequestForGroup);
-                    Log.d("KJHG","cancelFriendRequest IS CALLED");
                 }
         }
     }
@@ -219,17 +222,18 @@ public class FriendRequestFragment extends Fragment implements MyFriendRequestFr
     private void acceptFriendRequest(String friendUid, final String groupKey, boolean isRequestForGroup){
         requestSenderUid = currentUserId; //means Current User Id
         requestReceiverUid = friendUid; //means Friend User Id
+
         Map<String, Object> map = new HashMap<>();
         if (! isRequestForGroup) {
             //If friend request is not for a group, then this code will execute
-            map.put(requestSenderUid + "/" + requestReceiverUid, new FriendRequest(Constant.FRIEND, false, "", requestReceiverUid, "now"));
-            map.put(requestReceiverUid + "/" + requestSenderUid, new FriendRequest(Constant.FRIEND, false, "", requestReceiverUid, "now"));
+            map.put(requestSenderUid + "/" + requestReceiverUid, new FriendRequest(Constant.FRIEND, false, "", requestReceiverUid, System.currentTimeMillis()));
+            map.put(requestReceiverUid + "/" + requestSenderUid, new FriendRequest(Constant.FRIEND, false, "", requestReceiverUid, System.currentTimeMillis()));
             friendRequestRootDatabaseRef.updateChildren(map, new DatabaseReference.CompletionListener() {
                 @Override
                 public void onComplete(@Nullable DatabaseError error, @NonNull DatabaseReference ref) {
                     if (error == null) {
                         //all ok
-                        Friend friend = new Friend("now", Constant.SINGLE_FRIEND);
+                        Friend friend = new Friend(System.currentTimeMillis(), Constant.SINGLE_FRIEND);
                         Map<String, Object> friendsMap = new HashMap<>();
                         friendsMap.put(requestSenderUid + "/" + requestReceiverUid, friend);
                         friendsMap.put(requestReceiverUid + "/" + requestSenderUid, friend);
@@ -239,18 +243,28 @@ public class FriendRequestFragment extends Fragment implements MyFriendRequestFr
             });
         }else {
             //Request is for group friend request
-            map.put(requestSenderUid+"/"+requestReceiverUid + groupKey, new FriendRequest(Constant.FRIEND,true, groupKey,requestReceiverUid,"now"));
-            map.put(requestReceiverUid+"/"+requestSenderUid + groupKey, new FriendRequest(Constant.FRIEND, true, groupKey,requestSenderUid,"now"));
+            map.put(requestSenderUid+"/"+requestReceiverUid + groupKey, new FriendRequest(Constant.FRIEND,true, groupKey,requestReceiverUid, System.currentTimeMillis()));
+            map.put(requestReceiverUid+"/"+requestSenderUid + groupKey, new FriendRequest(Constant.FRIEND, true, groupKey,requestSenderUid, System.currentTimeMillis()));
             friendRequestRootDatabaseRef.updateChildren(map, new DatabaseReference.CompletionListener() {
                 @Override
                 public void onComplete(@Nullable DatabaseError error, @NonNull DatabaseReference ref) {
                     if (error == null){
                         //means all ok
-                        Friend friend = new Friend("now", Constant.GROUP_FRIEND);
+                        Friend friend = new Friend(System.currentTimeMillis(), Constant.GROUP_FRIEND);
                         Map<String, Object> addFriendMap = new HashMap<>();
                         addFriendMap.put("friends"+"/"+currentUserId+"/"+groupKey,friend);  //group is added current user friend's node
                         addFriendMap.put("group_friends"+"/"+groupKey+"/"+currentUserId,friend);// the current user is added to the group friend's node
-                        rootDatabaseRef.updateChildren(addFriendMap);
+                        rootDatabaseRef.updateChildren(addFriendMap, new DatabaseReference.CompletionListener() {
+                            @Override
+                            public void onComplete(@Nullable DatabaseError error, @NonNull DatabaseReference ref) {
+                                if (error == null){
+                                    //Means all Ok
+                                    //Increment 'totalGroupFriends' by 1
+                                    FirebaseDatabase.getInstance().getReference().child("groups")
+                                            .child(groupKey).child("totalGroupFriends").setValue(ServerValue.increment(1));
+                                }
+                            }
+                        });
 
                     }
                 }
@@ -272,7 +286,6 @@ public class FriendRequestFragment extends Fragment implements MyFriendRequestFr
             dataMap.put(requestSenderUid + "/" + requestReceiverUid + groupKey, null);
             dataMap.put(requestReceiverUid + "/" + requestSenderUid + groupKey, null);;
             friendRequestRootDatabaseRef.updateChildren(dataMap);
-                Log.d("KJHG","cancel else IS CALLED");
         }
     }
 

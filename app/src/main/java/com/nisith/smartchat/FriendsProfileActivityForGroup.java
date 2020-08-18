@@ -19,6 +19,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ServerValue;
 import com.google.firebase.database.ValueEventListener;
 import com.nisith.smartchat.Model.Friend;
 import com.nisith.smartchat.Model.FriendRequest;
@@ -38,7 +39,7 @@ public class FriendsProfileActivityForGroup extends AppCompatActivity {
     private Button friendRequestButton, declineRequestButton;
     private TextView displayMessageTextView, groupNameTextView;
     //Firebase
-    private DatabaseReference rootDatabaseRef, friendUserDatabaseRef, friendsDatabaseRef, friendRequestDatabaseRef, groupDatabaseRef;
+    private DatabaseReference rootDatabaseRef, friendUserDatabaseRef, friendsDatabaseRef, friendRequestDatabaseRef, currentGroupDatabaseRef;
     private ValueEventListener valueEventListener;
     private String friendName, userProfileImageUrl;
     private String currentUserId, friendUid, requestSenderUid, requestReceiverUid, groupKey;
@@ -68,11 +69,10 @@ public class FriendsProfileActivityForGroup extends AppCompatActivity {
             friendUserDatabaseRef = FirebaseDatabase.getInstance().getReference().child("users").child(friendUid);
             friendRequestDatabaseRef = FirebaseDatabase.getInstance().getReference().child("friend_requests");
             friendsDatabaseRef = FirebaseDatabase.getInstance().getReference().child("friends");
-            groupDatabaseRef = FirebaseDatabase.getInstance().getReference().child("groups").child(groupKey);
+            currentGroupDatabaseRef = FirebaseDatabase.getInstance().getReference().child("groups").child(groupKey);
             requestSenderUid = FirebaseAuth.getInstance().getCurrentUser().getUid(); //means Current User Id
             currentUserId = requestSenderUid;
             requestReceiverUid = friendUid; //means Friend User Id
-            setFriendRequestButtonState();
         }
         friendRequestButton.setOnClickListener(new MyButtonClickListener());
         declineRequestButton.setOnClickListener(new MyButtonClickListener());
@@ -144,6 +144,8 @@ public class FriendsProfileActivityForGroup extends AppCompatActivity {
                     }else {
                         Picasso.get().load(R.drawable.default_user_icon).placeholder(R.drawable.default_user_icon).into(friendProfileImageView);
                     }
+                    //Check if the friend is already present in this group or not
+                    checkIsFriendAlreadyAddedThisGroupOrNot();
                 }
             }
 
@@ -155,8 +157,8 @@ public class FriendsProfileActivityForGroup extends AppCompatActivity {
     }
 
     private void fetchDataForGroup(){
-        if (groupDatabaseRef != null){
-            groupDatabaseRef.addListenerForSingleValueEvent(new ValueEventListener() {
+        if (currentGroupDatabaseRef != null){
+            currentGroupDatabaseRef.addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
                     if (snapshot.exists()){
@@ -197,9 +199,42 @@ public class FriendsProfileActivityForGroup extends AppCompatActivity {
                     break;
 
                 case R.id.decline_request_button:
-                    declineFriendRequest();
+//                    declineFriendRequest();
             }
         }
+    }
+
+    private void checkIsFriendAlreadyAddedThisGroupOrNot(){
+        /*In this method we check if this friend is already join this group or not
+          If this friend is not yet add this group, then only we show 'send friend request' option */
+        FirebaseDatabase.getInstance().getReference().child("group_friends").child(groupKey)
+           .addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.hasChild(friendUid)){
+                    //Means this friend is already present in this group. So not show friend request options
+                    if (friendUid.equals(currentUserId)) {
+                        //If the current user open it's own profile...
+                        displayMessageTextView.setText("You already join this group");
+                    }else {
+                        //if user open friend's profile
+                        displayMessageTextView.setText(friendName + " already join this group");
+                    }
+                    displayMessageTextView.setVisibility(View.VISIBLE);
+                    friendRequestButton.setVisibility(View.INVISIBLE);
+                    friendRequestButton.setEnabled(false);
+                    declineRequestButton.setVisibility(View.GONE);
+                }else {
+                    //Means this friend is not present in this group. So show friend request options
+                    setFriendRequestButtonState();
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
     }
 
 
@@ -253,26 +288,26 @@ public class FriendsProfileActivityForGroup extends AppCompatActivity {
                             declineRequestButton.setEnabled(false);
 
                         }
-                        else if (requestStatus.equals(Constant.RECEIVE_REQUEST)){
-                            //This friend send request to the Current User.
-                            friendRequestButton.setText("Accept Request");
-                            friendRequestButton.setBackground(getDrawable(R.drawable.button_background_shape1));
-                            declineRequestButton.setText("Decline Request");
-                            declineRequestButton.setEnabled(true);
-                            displayMessageTextView.setVisibility(View.VISIBLE);
-                            displayMessageTextView.setText(friendName + " wants to add you in this group");
-                            declineRequestButton.setVisibility(View.VISIBLE);
-
-                        }else if (requestStatus.equals(Constant.FRIEND)){
-                            //Both of you are friends now.
-                            displayMessageTextView.setText("Both of you are friends now");
-                            displayMessageTextView.setVisibility(View.VISIBLE);
-                            declineRequestButton.setText("UnFriend");
-                            declineRequestButton.setVisibility(View.VISIBLE);
-                            declineRequestButton.setEnabled(true);
-                            friendRequestButton.setVisibility(View.INVISIBLE);
-                            friendRequestButton.setEnabled(false);
-                        }
+//                        else if (requestStatus.equals(Constant.RECEIVE_REQUEST)){
+//                            //This friend send request to the Current User.
+//                            friendRequestButton.setText("Accept Request");
+//                            friendRequestButton.setBackground(getDrawable(R.drawable.button_background_shape1));
+//                            declineRequestButton.setText("Decline Request");
+//                            declineRequestButton.setEnabled(true);
+//                            displayMessageTextView.setVisibility(View.VISIBLE);
+//                            displayMessageTextView.setText(friendName + " wants to add you in this group");
+//                            declineRequestButton.setVisibility(View.VISIBLE);
+//
+//                        }else if (requestStatus.equals(Constant.FRIEND)){
+//                            //Both of you are friends now.
+//                            displayMessageTextView.setText("Both of you are friends now");
+//                            displayMessageTextView.setVisibility(View.VISIBLE);
+//                            declineRequestButton.setText("UnFriend");
+//                            declineRequestButton.setVisibility(View.VISIBLE);
+//                            declineRequestButton.setEnabled(true);
+//                            friendRequestButton.setVisibility(View.INVISIBLE);
+//                            friendRequestButton.setEnabled(false);
+//                        }
                     }
 
                     @Override
@@ -291,8 +326,8 @@ public class FriendsProfileActivityForGroup extends AppCompatActivity {
             Map<String, Object> dataMap = new HashMap<>();
             //send request for group friendship
             //I concatinate group key to generate unike request key for group's friend request
-            dataMap.put(requestSenderUid + "/" + requestReceiverUid + groupKey, new FriendRequest(Constant.SEND_REQUEST, true, groupKey, requestReceiverUid,"now"));
-            dataMap.put(requestReceiverUid + "/" + requestSenderUid + groupKey, new FriendRequest(Constant.RECEIVE_REQUEST,  true, groupKey, requestSenderUid,"now"));
+            dataMap.put(requestSenderUid + "/" + requestReceiverUid + groupKey, new FriendRequest(Constant.SEND_REQUEST, true, groupKey, requestReceiverUid, System.currentTimeMillis()));
+            dataMap.put(requestReceiverUid + "/" + requestSenderUid + groupKey, new FriendRequest(Constant.RECEIVE_REQUEST,  true, groupKey, requestSenderUid, System.currentTimeMillis()));
             requestStatus = Constant.SEND_REQUEST;
             friendRequestDatabaseRef.updateChildren(dataMap);
 
@@ -301,66 +336,66 @@ public class FriendsProfileActivityForGroup extends AppCompatActivity {
             //Current user wants to Cancel friend request
             cancelFriendRequest();
         }
-        else if (requestStatus.equals(Constant.RECEIVE_REQUEST)){
-            //Current user wants to accept friend request
-            acceptFriendRequest();
-
-        }
+//        else if (requestStatus.equals(Constant.RECEIVE_REQUEST)){
+//            //Current user wants to accept friend request
+//            acceptFriendRequest();
+//
+//        }
     }
 
 
-
-    private void acceptFriendRequest(){
-        Map<String, Object> map = new HashMap<>();
-        map.put(requestSenderUid+"/"+requestReceiverUid + groupKey, new FriendRequest(Constant.FRIEND,true, groupKey,requestReceiverUid,"now"));
-        map.put(requestReceiverUid+"/"+requestSenderUid + groupKey, new FriendRequest(Constant.FRIEND, true, groupKey,requestSenderUid,"now"));
-        friendRequestDatabaseRef.updateChildren(map, new DatabaseReference.CompletionListener() {
-            @Override
-            public void onComplete(@Nullable DatabaseError error, @NonNull DatabaseReference ref) {
-                if (error == null){
-                    //means all ok
-                    Friend friend = new Friend("now", Constant.GROUP_FRIEND);
-                    Map<String, Object> addFriendMap = new HashMap<>();
-                    addFriendMap.put("friends"+"/"+currentUserId+"/"+groupKey,friend);  //group is added current user friend's node
-                    addFriendMap.put("group_friends"+"/"+groupKey+"/"+currentUserId,friend);// the current user is added to the group friend's node
-                    rootDatabaseRef.updateChildren(addFriendMap);
-
-                }
-            }
-        });
-    }
-
-    private void declineFriendRequest(){
-        if (declineRequestButton.getVisibility() == View.VISIBLE){
-            if (declineRequestButton.getText().toString().equalsIgnoreCase("Decline Request")) {
-                //Decline Request
-                cancelFriendRequest();
-            }else if (declineRequestButton.getText().toString().equalsIgnoreCase("UnFriend")){
-                //UnFriend
-                unFriend();
-            }
-        }
-    }
-
-    private void unFriend(){
-        Map<String, Object> unFriendMap = new HashMap<>();
-        unFriendMap.put(requestSenderUid+"/"+requestReceiverUid + groupKey, null);
-        unFriendMap.put(requestReceiverUid+"/"+requestSenderUid + groupKey, null);
-        friendRequestDatabaseRef.updateChildren(unFriendMap, new DatabaseReference.CompletionListener() {
-            @Override
-            public void onComplete(@Nullable DatabaseError error, @NonNull DatabaseReference ref) {
-                if (error == null){
-                    //means all ok
-                    Map<String, Object> addFriendMap = new HashMap<>();
-                    addFriendMap.put("friends"+"/"+currentUserId+"/"+groupKey, null);  //group is deleted from current user friend's node
-                    addFriendMap.put("group_friends"+"/"+groupKey+"/"+currentUserId, null);// the current user is deleted from the group friend's node
-                    rootDatabaseRef.updateChildren(addFriendMap);
-
-                }
-            }
-        });
-
-    }
+//
+//    private void acceptFriendRequest(){
+//        Map<String, Object> map = new HashMap<>();
+//        map.put(requestSenderUid+"/"+requestReceiverUid + groupKey, new FriendRequest(Constant.FRIEND,true, groupKey,requestReceiverUid,"now"));
+//        map.put(requestReceiverUid+"/"+requestSenderUid + groupKey, new FriendRequest(Constant.FRIEND, true, groupKey,requestSenderUid,"now"));
+//        friendRequestDatabaseRef.updateChildren(map, new DatabaseReference.CompletionListener() {
+//            @Override
+//            public void onComplete(@Nullable DatabaseError error, @NonNull DatabaseReference ref) {
+//                if (error == null){
+//                    //means all ok
+//                    Friend friend = new Friend("now", Constant.GROUP_FRIEND);
+//                    Map<String, Object> addFriendMap = new HashMap<>();
+//                    addFriendMap.put("friends"+"/"+currentUserId+"/"+groupKey,friend);  //group is added current user friend's node
+//                    addFriendMap.put("group_friends"+"/"+groupKey+"/"+currentUserId,friend);// the current user is added to the group friend's node
+//                    rootDatabaseRef.updateChildren(addFriendMap);
+//
+//                }
+//            }
+//        });
+//    }
+//
+//    private void declineFriendRequest(){
+//        if (declineRequestButton.getVisibility() == View.VISIBLE){
+//            if (declineRequestButton.getText().toString().equalsIgnoreCase("Decline Request")) {
+//                //Decline Request
+//                cancelFriendRequest();
+//            }else if (declineRequestButton.getText().toString().equalsIgnoreCase("UnFriend")){
+//                //UnFriend
+//                unFriend();
+//            }
+//        }
+//    }
+//
+//    private void unFriend(){
+//        Map<String, Object> unFriendMap = new HashMap<>();
+//        unFriendMap.put(requestSenderUid+"/"+requestReceiverUid + groupKey, null);
+//        unFriendMap.put(requestReceiverUid+"/"+requestSenderUid + groupKey, null);
+//        friendRequestDatabaseRef.updateChildren(unFriendMap, new DatabaseReference.CompletionListener() {
+//            @Override
+//            public void onComplete(@Nullable DatabaseError error, @NonNull DatabaseReference ref) {
+//                if (error == null){
+//                    //means all ok
+//                    Map<String, Object> addFriendMap = new HashMap<>();
+//                    addFriendMap.put("friends"+"/"+currentUserId+"/"+groupKey, null);  //group is deleted from current user friend's node
+//                    addFriendMap.put("group_friends"+"/"+groupKey+"/"+currentUserId, null);// the current user is deleted from the group friend's node
+//                    rootDatabaseRef.updateChildren(addFriendMap);
+//
+//                }
+//            }
+//        });
+//
+//    }
 
 
 

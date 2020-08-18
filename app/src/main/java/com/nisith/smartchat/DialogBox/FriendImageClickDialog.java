@@ -157,10 +157,13 @@ public class FriendImageClickDialog extends DialogFragment {
         public void onClick(View view) {
             switch (view.getId()){
                 case R.id.profile_image_view:
-                    Intent intent = new Intent(getContext(), ImageDisplayActivity.class);
-                    intent.putExtra(Constant.USER_NAME, name);
-                    intent.putExtra(Constant.PROFILE_IMAGE_URL,profileImageUrl);
-                    startActivity(intent);
+                    if (friendType != null) {
+                        Intent intent = new Intent(getContext(), ImageDisplayActivity.class);
+                        intent.putExtra(Constant.USER_NAME, name);
+                        intent.putExtra(Constant.FRIENDS_TYPE, friendType);
+                        intent.putExtra(Constant.PROFILE_IMAGE_URL, profileImageUrl);
+                        startActivity(intent);
+                    }
                     break;
 
                 case R.id.info_image_view:

@@ -70,12 +70,6 @@ public class ProfileSettingActivity extends AppCompatActivity {
                 startActivity(new Intent(ProfileSettingActivity.this, EditProfileActivity.class));
             }
         });
-        profileImageView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                displayProfileImage();
-            }
-        });
     }
     private void initializeViews(){
         appToolbar = findViewById(R.id.app_toolbar);

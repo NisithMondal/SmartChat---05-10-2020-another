@@ -170,6 +170,7 @@
                 android:paddingStart="10sp"
                 android:paddingEnd="10dp"
                 android:textStyle="bold"
+                android:layout_marginBottom="8dp"
                 />
 
 

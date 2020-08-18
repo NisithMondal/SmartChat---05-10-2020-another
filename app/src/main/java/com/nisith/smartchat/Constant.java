@@ -25,6 +25,7 @@ public class Constant {
     public static final String SEARCH_FRIENDS_FOR_ONE_TO_ONE_FRIENDSHIP = "search_friends_for_one_to_one_friendship";
     public static final String SEARCH_FRIENDS_FOR_GROUP_FRIENDSHIP = "search_friend_for_group_friendship";
     public static final String SEARCH_FRIENDS_TYPE = "search_friends_type";
+    public static final String FRIENDS_TYPE = "friends_type";
 
 
 

@@ -200,7 +200,7 @@ public class CreateGroupActivity extends AppCompatActivity {
     private void handelFriendOperation(final String groupKey){
         //This method add current user to the specified group's 'group_friends' node and this group is added the current user's
         //'friends' node also ...
-        Friend friend = new Friend("now", Constant.GROUP_FRIEND);
+        Friend friend = new Friend(System.currentTimeMillis(), Constant.GROUP_FRIEND);
         Map<String, Object> addFriendMap = new HashMap<>();
         addFriendMap.put("friends"+"/"+currentUserUid+"/"+groupKey,friend);  //group is added current user friend node
         addFriendMap.put("group_friends"+"/"+groupKey+"/"+currentUserUid,friend);// the current user is added to the group_friends node

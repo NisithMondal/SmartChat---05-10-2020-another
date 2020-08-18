@@ -11,9 +11,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -27,12 +25,13 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+import com.nisith.smartchat.Model.UserDetailInfo;
 import com.nisith.smartchat.Model.UserProfile;
 import com.squareup.picasso.Picasso;
 import com.theartofdev.edmodo.cropper.CropImage;
@@ -81,7 +80,7 @@ public class RegisterActivity extends AppCompatActivity {
         //Firebase
         firebaseAuth = FirebaseAuth.getInstance();
 
-        rootDatabaseReference = FirebaseDatabase.getInstance().getReference().child("users");
+        rootDatabaseReference = FirebaseDatabase.getInstance().getReference();
         rootStorageReference = FirebaseStorage.getInstance().getReference().child("all_user_picture");
     }
 
@@ -204,18 +203,24 @@ public class RegisterActivity extends AppCompatActivity {
                         if (task.isSuccessful()){
                             //account created successfully
                             UserProfile currentUserProfile = new UserProfile(userName,Constant.USER_DEFAULT_STATUS,"default");
-                            rootDatabaseReference.child(firebaseAuth.getCurrentUser().getUid()).setValue(currentUserProfile)
-                                    .addOnCompleteListener(new OnCompleteListener<Void>() {
-                                        @Override
-                                        public void onComplete(@NonNull Task<Void> task) {
-                                            if (task.isSuccessful()){
-                                                //Upload profile image and thumbnail and store url in database
-                                                uploadUserProfileImages();
-                                            }else {
-                                                Toast.makeText(RegisterActivity.this, Objects.requireNonNull(task.getException()).getMessage(), Toast.LENGTH_SHORT).show();
-                                            }
-                                        }
-                                    });
+                            UserDetailInfo userDetailInfo = new UserDetailInfo("now");
+                            String currentUserId = firebaseAuth.getCurrentUser().getUid();
+                            Map<String, Object> map = new HashMap<>();
+                            //Create two database node
+                            map.put("users" + "/" + currentUserId, currentUserProfile);
+                            map.put("users_detail_info" + "/" +currentUserId, userDetailInfo);
+                            rootDatabaseReference.updateChildren(map, new DatabaseReference.CompletionListener() {
+                                @Override
+                                public void onComplete(@Nullable DatabaseError error, @NonNull DatabaseReference ref) {
+                                    if (error == null){
+                                        //ALL OK
+                                        //Upload profile image and thumbnail and store url in database
+                                        uploadUserProfileImages();
+                                    }else {
+                                        Toast.makeText(RegisterActivity.this, error.getMessage(), Toast.LENGTH_SHORT).show();
+                                    }
+                                }
+                            });
 
                         }else {
                             progressBar.setVisibility(View.GONE);
@@ -248,7 +253,7 @@ public class RegisterActivity extends AppCompatActivity {
                                 String profileImageUrl = imageUri.toString();
                                 Map<String,Object> map = new HashMap<>();
                                 map.put("profileImage",profileImageUrl);
-                                rootDatabaseReference.child(firebaseAuth.getCurrentUser().getUid()).updateChildren(map);
+                                rootDatabaseReference.child("users").child(firebaseAuth.getCurrentUser().getUid()).updateChildren(map);
                                 Toast.makeText(RegisterActivity.this, "Account Created Successfully", Toast.LENGTH_SHORT).show();
                             }
                         }

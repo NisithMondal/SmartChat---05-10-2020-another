@@ -20,6 +20,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ServerValue;
 import com.google.firebase.database.ValueEventListener;
 import com.nisith.smartchat.Model.Friend;
 import com.nisith.smartchat.Model.FriendRequest;
@@ -250,8 +251,8 @@ import java.util.Map;
             //Current user wants to send friend request to this friend
             Map<String, Object> dataMap = new HashMap<>();
             //send request for single i.e. for one to one chat friendship
-            dataMap.put(requestSenderUid + "/" + requestReceiverUid, new FriendRequest(Constant.SEND_REQUEST, false, "",requestReceiverUid,"now"));
-            dataMap.put(requestReceiverUid + "/" + requestSenderUid, new FriendRequest(Constant.RECEIVE_REQUEST,false, "",requestSenderUid,"now"));
+            dataMap.put(requestSenderUid + "/" + requestReceiverUid, new FriendRequest(Constant.SEND_REQUEST, false, "",requestReceiverUid, System.currentTimeMillis()));
+            dataMap.put(requestReceiverUid + "/" + requestSenderUid, new FriendRequest(Constant.RECEIVE_REQUEST,false, "",requestSenderUid, System.currentTimeMillis()));
             requestStatus = Constant.SEND_REQUEST;
             friendRequestDatabaseRef.updateChildren(dataMap);
 
@@ -268,15 +269,15 @@ import java.util.Map;
 
      private void acceptFriendRequest(){
         Map<String, Object> map = new HashMap<>();
-        map.put(requestSenderUid+"/"+requestReceiverUid,new FriendRequest(Constant.FRIEND,false, "", requestReceiverUid,"now"));
-        map.put(requestReceiverUid+"/"+requestSenderUid,new FriendRequest(Constant.FRIEND, false, "",requestSenderUid,"now"));
+        map.put(requestSenderUid+"/"+requestReceiverUid,new FriendRequest(Constant.FRIEND,false, "", requestReceiverUid, System.currentTimeMillis()));
+        map.put(requestReceiverUid+"/"+requestSenderUid,new FriendRequest(Constant.FRIEND, false, "",requestSenderUid, System.currentTimeMillis()));
         friendRequestDatabaseRef.updateChildren(map, new DatabaseReference.CompletionListener() {
             @Override
             public void onComplete(@Nullable DatabaseError error, @NonNull DatabaseReference ref) {
                 if (error == null){
                     //all ok
 //                    Map<String, Object> map1 = new HashMap<>();
-                    Friend friend = new Friend("now", Constant.SINGLE_FRIEND);
+                    Friend friend = new Friend(System.currentTimeMillis(), Constant.SINGLE_FRIEND);
                     Map<String, Object> friendsMap = new HashMap<>();
                     friendsMap.put(requestSenderUid+"/"+requestReceiverUid,friend);
                     friendsMap.put(requestReceiverUid+"/"+requestSenderUid,friend);

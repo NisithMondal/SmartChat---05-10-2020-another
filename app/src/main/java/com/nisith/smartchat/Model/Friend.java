@@ -3,13 +3,13 @@ package com.nisith.smartchat.Model;
 public class Friend {
 
     private String friendsType; //Means single-friend or group-friend
-    private String timeStamp;
+    private long timeStamp;
 
     public Friend(){
 
     }
 
-    public Friend(String timeStamp, String friendsType) {
+    public Friend(long timeStamp, String friendsType) {
         this.timeStamp = timeStamp;
         this.friendsType = friendsType;
     }
@@ -18,7 +18,7 @@ public class Friend {
         return friendsType;
     }
 
-    public String getTimeStamp() {
+    public long getTimeStamp() {
         return timeStamp;
     }
 }

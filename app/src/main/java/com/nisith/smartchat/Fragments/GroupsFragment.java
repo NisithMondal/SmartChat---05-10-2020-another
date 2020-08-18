@@ -8,18 +8,22 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 import com.firebase.ui.database.FirebaseRecyclerOptions;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.nisith.smartchat.Adapters.MyGroupFragmentRecyclerAdapter;
 import com.nisith.smartchat.Constant;
+import com.nisith.smartchat.CreateGroupActivity;
 import com.nisith.smartchat.DialogBox.FriendImageClickDialog;
+import com.nisith.smartchat.FindFriendsActivity;
 import com.nisith.smartchat.GroupProfileActivity;
 import com.nisith.smartchat.Model.Friend;
 import com.nisith.smartchat.R;
@@ -27,6 +31,7 @@ import com.nisith.smartchat.R;
 public class GroupsFragment extends Fragment implements MyGroupFragmentRecyclerAdapter.OnGroupFragmentViewsClickListener {
 
     private RecyclerView recyclerView;
+    private FloatingActionButton floatingActionButton;
     private MyGroupFragmentRecyclerAdapter adapter;
     //Firebase
     private DatabaseReference currentUserFriendsDatabaseRef;
@@ -41,6 +46,7 @@ public class GroupsFragment extends Fragment implements MyGroupFragmentRecyclerA
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_groups, container, false);
         recyclerView = view.findViewById(R.id.recycler_view);
+        floatingActionButton = view.findViewById(R.id.floating_action_button);
         return view;
     }
 
@@ -52,6 +58,13 @@ public class GroupsFragment extends Fragment implements MyGroupFragmentRecyclerA
         String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
         currentUserFriendsDatabaseRef = FirebaseDatabase.getInstance().getReference().child("friends").child(currentUserId);
         setUpRecyclerViewWithAdapter();
+        floatingActionButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getContext(), CreateGroupActivity.class);
+                startActivity(intent);
+            }
+        });
 
     }
 
@@ -87,8 +100,9 @@ public class GroupsFragment extends Fragment implements MyGroupFragmentRecyclerA
     public void onFriendViewsClick(View view, String groupKey) {
         //called when each row of Friend Fragment is clicked
         switch (view.getId()){
-            case R.id.profile_image_view:
-//                showImageDialog(friendUid);
+            case R.id.group_profile_image_view:
+                showImageDialog(groupKey);
+                Log.d("MNBV", "profile_image_view is called");
                 break;
 
             case R.id.root_view:
@@ -98,8 +112,8 @@ public class GroupsFragment extends Fragment implements MyGroupFragmentRecyclerA
         }
     }
 
-    private void showImageDialog(String friendUid){
-        FriendImageClickDialog dialog = new FriendImageClickDialog(friendUid);
+    private void showImageDialog(String key){
+        FriendImageClickDialog dialog = new FriendImageClickDialog(key);
         dialog.show(getActivity().getSupportFragmentManager(),"smart chat");
     }
 

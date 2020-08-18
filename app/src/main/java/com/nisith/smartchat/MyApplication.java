@@ -13,7 +13,6 @@ public class MyApplication extends Application {
     public void onCreate() {
         super.onCreate();
         FirebaseDatabase.getInstance().setPersistenceEnabled(true);
-        Log.d("BVCX","MyApplication onCreate() is called");
     }
 
 }

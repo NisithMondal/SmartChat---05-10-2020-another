@@ -3,7 +3,6 @@ package com.nisith.smartchat.Adapters;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
@@ -16,12 +15,8 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.nisith.smartchat.Model.Friend;
 import com.nisith.smartchat.Model.UserProfile;
-import com.nisith.smartchat.Model.ValueEventListenerModel;
 import com.nisith.smartchat.R;
 import com.squareup.picasso.Picasso;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -30,7 +25,7 @@ import de.hdodenhof.circleimageview.CircleImageView;
 public class MyGroupFriendsRecyclerAdapter extends FirebaseRecyclerAdapter<Friend, MyGroupFriendsRecyclerAdapter.MyViewHolder> {
 
     public interface OnGroupFriendsViewsClickListener {
-        void onViewClick(View view, String friendUid);
+        void onViewClick(View view, String friendsUid);
     }
 
     private String currentUser;
@@ -48,7 +43,7 @@ public class MyGroupFriendsRecyclerAdapter extends FirebaseRecyclerAdapter<Frien
     @NonNull
     @Override
     public MyViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.single_row_appearence_for_friend_layout,parent,false);
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.single_row_appearence_for_all_group_friends,parent,false);
         return new MyViewHolder(view);
     }
 

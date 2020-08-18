@@ -33,11 +33,21 @@ public class ImageDisplayActivity extends AppCompatActivity {
         Intent intent = getIntent();
         String userName = intent.getStringExtra(Constant.USER_NAME);
         String imageUrl = intent.getStringExtra(Constant.PROFILE_IMAGE_URL);
+        String friendType = intent.getStringExtra(Constant.FRIENDS_TYPE);
         if (userName != null){
             toolbarTextView.setText(userName);
         }
         if (imageUrl != null){
-            Picasso.get().load(imageUrl).placeholder(R.drawable.default_user_icon).into(imageView);
+            if (friendType != null) {
+                if (friendType.equals(Constant.SINGLE_FRIEND)) {
+                    Picasso.get().load(imageUrl).placeholder(R.drawable.default_user_icon).into(imageView);
+                } else if (friendType.equals(Constant.GROUP_FRIEND)) {
+                    Picasso.get().load(imageUrl).placeholder(R.drawable.ic_group_icon1).into(imageView);
+                }
+            }else {
+                //if any activity not send friendType, then do this
+                Picasso.get().load(imageUrl).placeholder(R.drawable.default_user_icon).into(imageView);
+            }
         }
     }
 }

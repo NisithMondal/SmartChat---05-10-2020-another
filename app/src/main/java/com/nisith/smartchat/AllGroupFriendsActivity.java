@@ -17,6 +17,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.nisith.smartchat.Adapters.MyGroupFriendsRecyclerAdapter;
+import com.nisith.smartchat.DialogBox.ImageClickDialog;
 import com.nisith.smartchat.Model.Friend;
 import com.squareup.picasso.Picasso;
 
@@ -107,7 +108,21 @@ public class AllGroupFriendsActivity extends AppCompatActivity implements MyGrou
 
 
     @Override
-    public void onViewClick(View view, String friendUid) {
+    public void onViewClick(View view, String friendsUid) {
+        switch (view.getId()){
+            case R.id.profile_image_view:
+                showImageDialog(friendsUid);
+                break;
 
+            case R.id.root_view:
+                Intent intent = new Intent(getApplicationContext(), FriendsProfileActivity.class);
+                intent.putExtra(Constant.FRIEND_UID, friendsUid);
+                startActivity(intent);
+        }
+    }
+
+    private void showImageDialog(String friendUid){
+        ImageClickDialog dialog = new ImageClickDialog(friendUid);
+        dialog.show(getSupportFragmentManager(),"smart chat");
     }
 }

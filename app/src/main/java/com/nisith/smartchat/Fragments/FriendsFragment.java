@@ -13,6 +13,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.firebase.ui.database.FirebaseRecyclerOptions;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
@@ -20,13 +21,16 @@ import com.google.firebase.database.Query;
 import com.nisith.smartchat.Adapters.MyFriendFragmentRecyclerAdapter;
 import com.nisith.smartchat.Constant;
 import com.nisith.smartchat.DialogBox.FriendImageClickDialog;
+import com.nisith.smartchat.FindFriendsActivity;
 import com.nisith.smartchat.FriendsProfileActivity;
+import com.nisith.smartchat.HomeActivity;
 import com.nisith.smartchat.Model.Friend;
 import com.nisith.smartchat.R;
 
 public class FriendsFragment extends Fragment implements MyFriendFragmentRecyclerAdapter.OnFriendFragmentViewsClickListener {
 
     private RecyclerView recyclerView;
+    private FloatingActionButton floatingActionButton;
     private MyFriendFragmentRecyclerAdapter adapter;
     //Firebase
     private DatabaseReference friendsDatabaseRef;
@@ -41,6 +45,7 @@ public class FriendsFragment extends Fragment implements MyFriendFragmentRecycle
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_friends, container, false);
         recyclerView = view.findViewById(R.id.recycler_view);
+        floatingActionButton = view.findViewById(R.id.floating_action_button);
         return view;
     }
 
@@ -51,7 +56,15 @@ public class FriendsFragment extends Fragment implements MyFriendFragmentRecycle
         String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
         friendsDatabaseRef = FirebaseDatabase.getInstance().getReference().child("friends").child(currentUserId);
         setUpRecyclerViewWithAdapter();
-
+        floatingActionButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getContext(), FindFriendsActivity.class);
+                //current user wants to search friends for one to one chat
+                intent.putExtra(Constant.SEARCH_FRIENDS_TYPE, Constant.SEARCH_FRIENDS_FOR_ONE_TO_ONE_FRIENDSHIP);
+                startActivity(intent);
+            }
+        });
     }
 
     private void setUpRecyclerViewWithAdapter(){
