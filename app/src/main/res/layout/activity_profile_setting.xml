@@ -7,17 +7,12 @@
     android:layout_height="match_parent"
     tools:context=".ProfileSettingActivity">
 
-    <include
-        android:id="@+id/app_toolbar"
-        layout="@layout/app_toolbar"
-        />
 
 
 
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@+id/app_toolbar"
         android:scrollbars="vertical" >
 
         <RelativeLayout
@@ -29,6 +24,14 @@
                 android:layout_width="match_parent"
                 android:layout_height="270dp"
                 android:src="@drawable/default_user_icon"
+                />
+
+            <androidx.appcompat.widget.Toolbar
+                android:id="@+id/app_toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="55dp"
+                android:theme="@style/ThemeOverlay.AppCompat.Dark"
+                app:popupTheme="@style/Theme.AppCompat.Light"
                 />
 
             <TextView
@@ -56,8 +59,8 @@
                 android:textColor="#393A39"
                 android:paddingStart="4dp"
                 android:paddingTop="10dp"
-                android:paddingBottom="5dp"
-                android:drawableStart="@drawable/ic_about_icon"
+                android:paddingBottom="0dp"
+                android:drawableStart="@drawable/ic_user_status_icon"
                 android:drawablePadding="5dp"
                 />
 
@@ -67,7 +70,6 @@
                 android:layout_height="wrap_content"
                 android:textSize="16sp"
                 android:layout_below="@+id/status_text"
-                android:text="Life is a bed of Rose"
                 android:layout_marginTop="0dp"
                 android:textStyle="normal"
                 android:textColor="#4B4E4B"
@@ -98,7 +100,6 @@
                 android:layout_height="wrap_content"
                 android:textSize="16sp"
                 android:layout_below="@+id/info_text_heading"
-                android:text="I am 20 Years old a beautiful girl. I am studing in Haldia Institute of Technology in third year."
                 android:layout_marginTop="0dp"
                 android:textStyle="normal"
                 android:textColor="#4B4E4B"

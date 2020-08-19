@@ -22,11 +22,16 @@ import android.widget.Toast;
 import com.google.android.material.tabs.TabLayout;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.nisith.smartchat.Adapters.MyPagerAdapter;
+import com.nisith.smartchat.Model.UserStatus;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 public class HomeActivity extends AppCompatActivity {
@@ -72,14 +77,40 @@ public class HomeActivity extends AppCompatActivity {
 
 
 
+
+
     @Override
     protected void onStart() {
         super.onStart();
         if (currentUser == null){
             openLoginActivity();
             finish();
+        }else {
+            //Current user is already logged in
+            updateUserStatus(true);
+            Log.d("ASDFG", " Home onStart is called");
         }
     }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (currentUser != null){
+            //Current user is already logged in
+            updateUserStatus(false);
+        }
+    }
+
+
+    private void updateUserStatus(boolean isOnline){
+        Map<String, Object> userStatusMap = new HashMap<>();
+        UserStatus userStatus = new UserStatus(isOnline, System.currentTimeMillis());
+        DatabaseReference rootDatabaseRef = FirebaseDatabase.getInstance().getReference();
+        userStatusMap.put("users_detail_info" + "/" + currentUser.getUid() + "/" + "userStatus", userStatus);
+        //update user's states
+        rootDatabaseRef.updateChildren(userStatusMap);
+    }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -88,6 +119,7 @@ public class HomeActivity extends AppCompatActivity {
         menuInflater.inflate(R.menu.app_menu,menu);
         return true;
     }
+
 
 
     @Override

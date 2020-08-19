@@ -3,9 +3,9 @@ package com.nisith.smartchat;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import de.hdodenhof.circleimageview.CircleImageView;
 
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -29,14 +29,14 @@ public class ProfileSettingActivity extends AppCompatActivity {
     private Toolbar appToolbar;
     private TextView toolbarTextView;
     private ImageView profileImageView;
-    private TextView userNameTextView, userStatusTextView;
+    private TextView userNameTextView, userStatusTextView, aboutUserTextView;
     private ProgressBar progressBar;
     private Button editProfileButton;
     private String userName;
     private String profileImageUrl;
     //Firebase
-    private DatabaseReference rootDatabaseRef;
-    private ValueEventListener valueEventListener;
+    private DatabaseReference rootDatabaseRef, aboutMeDatabaseRef;
+    private ValueEventListener valueEventListener, aboutMeValueEventListener;
 
 
     @Override
@@ -46,7 +46,7 @@ public class ProfileSettingActivity extends AppCompatActivity {
         initializeViews();
         setSupportActionBar(appToolbar);
         setTitle("");
-        toolbarTextView.setText("Profile Setting");
+//        toolbarTextView.setTextColor(Color.BLACK);
         appToolbar.setNavigationIcon(R.drawable.ic_back_arrow_icon);
         appToolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
@@ -61,8 +61,7 @@ public class ProfileSettingActivity extends AppCompatActivity {
         if (currentUser != null) {
            String currentUserId = currentUser.getUid();
             rootDatabaseRef = FirebaseDatabase.getInstance().getReference().child("users").child(currentUserId);
-//            rootDatabaseRef.keepSynced(true);
-            showUserProfile();
+            aboutMeDatabaseRef = FirebaseDatabase.getInstance().getReference().child("users_detail_info").child(currentUserId).child("aboutMe");
         }
         editProfileButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -73,10 +72,11 @@ public class ProfileSettingActivity extends AppCompatActivity {
     }
     private void initializeViews(){
         appToolbar = findViewById(R.id.app_toolbar);
-        toolbarTextView = findViewById(R.id.toolbar_text_view);
+//        toolbarTextView = findViewById(R.id.toolbar_text_view);
         profileImageView = findViewById(R.id.profile_image_view);
         userNameTextView = findViewById(R.id.user_name_text_view);
         userStatusTextView = findViewById(R.id.user_status_text_view);
+        aboutUserTextView = findViewById(R.id.user_info_text_view);
         progressBar = findViewById(R.id.progress_bar);
         editProfileButton = findViewById(R.id.edit_profile_button);
     }
@@ -84,7 +84,6 @@ public class ProfileSettingActivity extends AppCompatActivity {
     private void showUserProfile(){
         progressBar.setVisibility(View.VISIBLE);
         editProfileButton.setVisibility(View.INVISIBLE);
-        profileImageView.setEnabled(false);
          valueEventListener = rootDatabaseRef.addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -92,11 +91,10 @@ public class ProfileSettingActivity extends AppCompatActivity {
                     UserProfile userProfile = snapshot.getValue(UserProfile.class);
                     if (userProfile != null){
                         editProfileButton.setVisibility(View.VISIBLE);
-                        profileImageView.setEnabled(true);
                         userName = userProfile.getUserName();
                         userNameTextView.setText(userName);
                         profileImageUrl = userProfile.getProfileImage();
-                        userStatusTextView.setText("Status: " + userProfile.getUserStatus());
+                        userStatusTextView.setText(userProfile.getUserStatus());
 
                         if (! profileImageUrl.equalsIgnoreCase("default")){
                             //means profileImage value is not default.
@@ -113,20 +111,46 @@ public class ProfileSettingActivity extends AppCompatActivity {
             });
     }
 
+
+    private void fetchAboutUserDetailsInfo(){
+        aboutMeValueEventListener = aboutMeDatabaseRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists()){
+                    String aboutMe = snapshot.getValue().toString();
+                    aboutUserTextView.setText(aboutMe);
+
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+    }
+
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
+    protected void onStart() {
+        super.onStart();
+        showUserProfile();
+        fetchAboutUserDetailsInfo();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
         if (valueEventListener != null && rootDatabaseRef != null){
             //Remove value event listener
             rootDatabaseRef.removeEventListener(valueEventListener);
         }
+
+        if (aboutMeDatabaseRef != null){
+            aboutMeDatabaseRef.removeEventListener(aboutMeValueEventListener);
+        }
+
     }
 
-    private void displayProfileImage(){
-        Intent intent = new Intent(ProfileSettingActivity.this,ImageDisplayActivity.class);
-        intent.putExtra(Constant.USER_NAME,userName);
-        intent.putExtra(Constant.PROFILE_IMAGE_URL,profileImageUrl);
-        startActivity(intent);
-    }
+
 
 }

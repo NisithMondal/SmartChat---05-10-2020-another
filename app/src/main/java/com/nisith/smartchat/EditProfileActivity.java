@@ -50,14 +50,15 @@ public class EditProfileActivity extends AppCompatActivity {
     private TextView toolbarTextView;
     private ProgressBar progressBar;
     private CircleImageView profileImageView;
-    private ImageView cameraImageView, nameEditIcon, statusEditIcon;
-    private EditText userNameEditText, userStatusEditText;
+    private ImageView cameraImageView, nameEditIcon, statusEditIcon, infoEditIcon;
+    private EditText userNameEditText, userStatusEditText, userInfoEditText;
     private Button updateProfileButton;
+    private boolean isInfoEditTextValueChange = false;// 'true' if about info edit text is enabled else 'false'
     //Firebase
-    private DatabaseReference databaseRef;
+    private DatabaseReference databaseRef, aboutMeDatabaseRef;
     private StorageReference rootStorageReference;
     private String currentUserId;
-    private ValueEventListener valueEventListener;
+    private ValueEventListener valueEventListener, aboutMeValueEventListener;
     private String userName;
     private String profileImageUrl;
     private byte[] profileImageByteArray;
@@ -75,6 +76,7 @@ public class EditProfileActivity extends AppCompatActivity {
         currentUserId = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
         databaseRef = FirebaseDatabase.getInstance().getReference().child("users");
         rootStorageReference = FirebaseStorage.getInstance().getReference().child("all_user_picture").child("users_profile_image");
+        aboutMeDatabaseRef = FirebaseDatabase.getInstance().getReference().child("users_detail_info").child(currentUserId).child("aboutMe");
         appToolbar.setNavigationIcon(R.drawable.ic_back_arrow_icon);
         appToolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
@@ -86,11 +88,11 @@ public class EditProfileActivity extends AppCompatActivity {
         cameraImageView.setOnClickListener(new MyClickListener());
         nameEditIcon.setOnClickListener(new MyClickListener());
         statusEditIcon.setOnClickListener(new MyClickListener());
-        userNameEditText.setOnClickListener(new MyClickListener());
-        userStatusEditText.setOnClickListener(new MyClickListener());
+        infoEditIcon.setOnClickListener(new MyClickListener());
+//        userNameEditText.setOnClickListener(new MyClickListener());
+//        userStatusEditText.setOnClickListener(new MyClickListener());
         updateProfileButton.setOnClickListener(new MyClickListener());
-        //Firebase
-        showUserProfile();
+
 
     }
 
@@ -104,10 +106,19 @@ public class EditProfileActivity extends AppCompatActivity {
         statusEditIcon = findViewById(R.id.status_edit_icon);
         userNameEditText = findViewById(R.id.user_name_edit_text);
         userStatusEditText = findViewById(R.id.user_status_edit_text);
+        userInfoEditText = findViewById(R.id.user_info_edit_text);
+        infoEditIcon = findViewById(R.id.user_info_edit_icon);
         updateProfileButton = findViewById(R.id.update_profile_button);
 
     }
 
+    @Override
+    protected void onStart() {
+        super.onStart();
+        //Firebase
+        showUserProfile();
+        fetchAboutUserDetailsInfo();
+    }
 
     private void showUserProfile(){
         progressBar.setVisibility(View.VISIBLE);
@@ -116,6 +127,7 @@ public class EditProfileActivity extends AppCompatActivity {
         cameraImageView.setEnabled(false);
         userNameEditText.setEnabled(false);
         userStatusEditText.setEnabled(false);
+        userInfoEditText.setEnabled(false);
         valueEventListener = databaseRef.child(currentUserId).addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -140,6 +152,26 @@ public class EditProfileActivity extends AppCompatActivity {
             public void onCancelled(@NonNull DatabaseError error) {
                 progressBar.setVisibility(View.GONE);
                 Toast.makeText(EditProfileActivity.this, "Data Not Loaded", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+
+
+    private void fetchAboutUserDetailsInfo(){
+        aboutMeValueEventListener = aboutMeDatabaseRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists()){
+                    String aboutMe = snapshot.getValue().toString();
+                    userInfoEditText.setText(aboutMe);
+
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
             }
         });
     }
@@ -170,6 +202,13 @@ public class EditProfileActivity extends AppCompatActivity {
                     updateProfileButton.setVisibility(View.VISIBLE);
                     break;
 
+                case R.id.user_info_edit_icon:
+                    if (! userInfoEditText.isEnabled()){
+                        userInfoEditText.setEnabled(true);
+                    }
+                    updateProfileButton.setVisibility(View.VISIBLE);
+                    break;
+
                 case R.id.update_profile_button:
                     updateUserProfile();
                     break;
@@ -180,12 +219,16 @@ public class EditProfileActivity extends AppCompatActivity {
 
 
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
+    protected void onStop() {
+        super.onStop();
         if (valueEventListener != null && databaseRef != null){
             //Remove value event listener
             databaseRef.child(currentUserId).removeEventListener(valueEventListener);
         }
+        if (aboutMeDatabaseRef != null){
+            aboutMeDatabaseRef.removeEventListener(aboutMeValueEventListener);
+        }
+
     }
 
     private void openGallery(){
@@ -227,6 +270,7 @@ public class EditProfileActivity extends AppCompatActivity {
         updateProfileButton.setVisibility(View.GONE);
         String inputName = userNameEditText.getText().toString();
         String inputStatus = userStatusEditText.getText().toString();
+        String userInfo = userInfoEditText.getText().toString();
         if (profileImageByteArray == null){
             //means user not select any image from gallery. So only update user name and status
            updateUserProfileDataToDatabase(inputName,inputStatus,profileImageUrl);
@@ -235,6 +279,12 @@ public class EditProfileActivity extends AppCompatActivity {
             //means user select a image from gallery. So only update user name status and profile image.
             updateUserProfileWithImage(inputName,inputStatus);
         }
+
+        if (userInfoEditText.isEnabled()){
+            //If userInfoEditText is enabled means user edit his/her about info field. So update the value on firebase
+            aboutMeDatabaseRef.setValue(userInfo);
+        }
+
     }
 
 

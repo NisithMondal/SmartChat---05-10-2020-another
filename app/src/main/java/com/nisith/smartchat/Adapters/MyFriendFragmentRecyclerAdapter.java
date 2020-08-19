@@ -15,6 +15,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.nisith.smartchat.Model.Friend;
+import com.nisith.smartchat.Model.UserStatus;
 import com.nisith.smartchat.Model.ValueEventListenerModel;
 import com.nisith.smartchat.Model.UserProfile;
 import com.nisith.smartchat.R;
@@ -34,10 +35,9 @@ public class MyFriendFragmentRecyclerAdapter extends FirebaseRecyclerAdapter<Fri
     }
 
     private String currentUser;
-    private DatabaseReference userDatabaseRef, groupDatabaseRef;
+    private DatabaseReference userDatabaseRef, groupDatabaseRef, userDetailInfoDatabaseRef;
     private OnFriendFragmentViewsClickListener friendCardViewsClickListener;
-    private List<ValueEventListenerModel> removeListenerFromFriendList;
-    private List<ValueEventListenerModel> removeListenerFromGroupFriendList;
+    private List<ValueEventListenerModel> removeListenerFromFriendList, removeListenerFromFriendOnlineStatusList;
 
     public MyFriendFragmentRecyclerAdapter(@NonNull FirebaseRecyclerOptions<Friend> options, OnFriendFragmentViewsClickListener friendCardViewsClickListener) {
 
@@ -45,8 +45,10 @@ public class MyFriendFragmentRecyclerAdapter extends FirebaseRecyclerAdapter<Fri
         this.friendCardViewsClickListener = friendCardViewsClickListener;
         userDatabaseRef = FirebaseDatabase.getInstance().getReference().child("users");
         groupDatabaseRef = FirebaseDatabase.getInstance().getReference().child("groups");
+        userDetailInfoDatabaseRef = FirebaseDatabase.getInstance().getReference().child("users_detail_info");
         currentUser = FirebaseAuth.getInstance().getCurrentUser().getUid();
         this.removeListenerFromFriendList = new ArrayList<>();
+        this.removeListenerFromFriendOnlineStatusList = new ArrayList<>();
     }
 
     @NonNull
@@ -58,8 +60,8 @@ public class MyFriendFragmentRecyclerAdapter extends FirebaseRecyclerAdapter<Fri
 
     @Override
     protected void onBindViewHolder(@NonNull final MyViewHolder holder, int position, @NonNull Friend friend) {
-            final String userKey = getRef(position).getKey();
-            ValueEventListener friendValueEventListener = userDatabaseRef.child(userKey)
+            final String friendKey = getRef(position).getKey();
+            ValueEventListener friendValueEventListener = userDatabaseRef.child(friendKey)
                     .addValueEventListener(new ValueEventListener() {
                         @Override
                         public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -85,8 +87,36 @@ public class MyFriendFragmentRecyclerAdapter extends FirebaseRecyclerAdapter<Fri
 
                         }
                     });
-            removeListenerFromFriendList.add(new ValueEventListenerModel(userKey, friendValueEventListener));
+         removeListenerFromFriendList.add(new ValueEventListenerModel(friendKey, friendValueEventListener));
 
+            //Perform operation if friends are online or not. This info is fetch from 'user_details_info' database node.
+            //I store user status in this database
+         ValueEventListener statusValueEventListener = userDetailInfoDatabaseRef.child(friendKey).child("userStatus")
+                    .addValueEventListener(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot snapshot) {
+                            if (snapshot.exists()){
+                                UserStatus userStatus = snapshot.getValue(UserStatus.class);
+                                if (userStatus != null){
+                                   boolean isOnline = userStatus.isOnline();
+                                   if (isOnline){
+                                       holder.onlineStatusImageView.setVisibility(View.VISIBLE);
+                                   }else {
+                                       holder.onlineStatusImageView.setVisibility(View.GONE);
+                                   }
+                                }else {
+                                    //If data not available for any reason make online status invisible
+                                    holder.onlineStatusImageView.setVisibility(View.GONE);
+                                }
+                            }
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError error) {
+
+                        }
+                    });
+        removeListenerFromFriendOnlineStatusList.add(new ValueEventListenerModel(friendKey, statusValueEventListener));
     }
 
 
@@ -96,19 +126,24 @@ public class MyFriendFragmentRecyclerAdapter extends FirebaseRecyclerAdapter<Fri
             userDatabaseRef.child(model.getKey()).removeEventListener(model.getValueEventListener());
         }
         removeListenerFromFriendList.clear();
+
+        for (ValueEventListenerModel model : removeListenerFromFriendOnlineStatusList){
+            userDetailInfoDatabaseRef.child(model.getKey()).child("userStatus").removeEventListener(model.getValueEventListener());
+        }
+        removeListenerFromFriendOnlineStatusList.clear();
     }
 
 
     class MyViewHolder extends RecyclerView.ViewHolder{
         CircleImageView profileImageView;
         TextView profileNameTextView, userStatusTextView;
-        ImageView onlineStateImageView;
+        ImageView onlineStatusImageView;
         public MyViewHolder(@NonNull View itemView) {
             super(itemView);
             profileImageView = itemView.findViewById(R.id.profile_image_view);
             profileNameTextView = itemView.findViewById(R.id.user_name_text_view);
             userStatusTextView = itemView.findViewById(R.id.user_status_text_view);
-            onlineStateImageView = itemView.findViewById(R.id.online_state_image_view);
+            onlineStatusImageView = itemView.findViewById(R.id.online_state_image_view);
 
             //Click Listeners
             profileImageView.setOnClickListener(new View.OnClickListener() {

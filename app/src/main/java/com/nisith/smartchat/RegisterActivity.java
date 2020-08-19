@@ -33,6 +33,7 @@ import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.nisith.smartchat.Model.UserDetailInfo;
 import com.nisith.smartchat.Model.UserProfile;
+import com.nisith.smartchat.Model.UserStatus;
 import com.squareup.picasso.Picasso;
 import com.theartofdev.edmodo.cropper.CropImage;
 import com.theartofdev.edmodo.cropper.CropImageView;
@@ -203,7 +204,7 @@ public class RegisterActivity extends AppCompatActivity {
                         if (task.isSuccessful()){
                             //account created successfully
                             UserProfile currentUserProfile = new UserProfile(userName,Constant.USER_DEFAULT_STATUS,"default");
-                            UserDetailInfo userDetailInfo = new UserDetailInfo("now");
+                            UserDetailInfo userDetailInfo = new UserDetailInfo("Hi, I am "+userName, new UserStatus(false, System.currentTimeMillis()));
                             String currentUserId = firebaseAuth.getCurrentUser().getUid();
                             Map<String, Object> map = new HashMap<>();
                             //Create two database node

@@ -1,17 +1,25 @@
 package com.nisith.smartchat.Model;
 
 public class UserDetailInfo {
-    private String date;
+
+
+    private String aboutMe;
+    private UserStatus userStatus;
 
     public UserDetailInfo(){
 
     }
 
-    public UserDetailInfo(String date) {
-        this.date = date;
+    public UserDetailInfo(String aboutMe, UserStatus userStatus) {
+        this.aboutMe = aboutMe;
+        this.userStatus = userStatus;
     }
 
-    public String getDate() {
-        return date;
+    public UserStatus getUserStatus() {
+        return userStatus;
+    }
+
+    public String getAboutMe() {
+        return aboutMe;
     }
 }
