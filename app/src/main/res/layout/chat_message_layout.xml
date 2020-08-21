@@ -2,83 +2,121 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/root_view"
+    >
 
-    <androidx.cardview.widget.CardView
-        android:id="@+id/card_view1"
+    <de.hdodenhof.circleimageview.CircleImageView
+        android:id="@+id/profile_image_view"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:src="@drawable/default_user_icon"
+        android:visibility="visible"
+        android:layout_marginTop="8dp"
+        android:layout_marginStart="10dp"
+        android:layout_below="@+id/message_date_root_layout"
+        />
+
+    <RelativeLayout
+        android:id="@+id/receive_message_root_layout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:cardCornerRadius="10dp"
-        app:cardElevation="4dp"
-        app:cardBackgroundColor="#AED8D3"
-        android:layout_marginTop="18dp"
-        android:layout_centerHorizontal="true"
-
+        android:layout_marginStart="0dp"
+        android:layout_marginTop="17dp"
+        android:layout_toEndOf="@+id/profile_image_view"
+        android:background="@drawable/chat_receive_message_background_style"
+        android:layout_below="@+id/message_date_root_layout"
         >
-        <TextView
-            android:id="@+id/message_date_text_view"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:padding="8dp"
-            android:text="13/08/2020"
-            android:textColor="#000000"
-            android:textSize="15sp"
-            android:visibility="visible"
-            />
 
-    </androidx.cardview.widget.CardView>
-
-    <androidx.cardview.widget.CardView
-        android:id="@+id/card_view2"
-        android:layout_below="@+id/card_view1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:cardCornerRadius="20dp"
-        app:cardElevation="8dp"
-        app:cardBackgroundColor="#ABF3AE"
-        android:layout_marginStart="18dp"
-        android:layout_marginTop="18dp"
-
-        >
         <TextView
             android:id="@+id/receive_message_text_view"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:padding="12dp"
-            android:text="How is the weather today??"
+            android:padding="6dp"
+            android:text="How is the weather today?? I am going now for your home."
             android:textColor="#000000"
             android:maxWidth="280dp"
             android:textSize="16sp"
+            android:layout_marginTop="6dp"
             android:visibility="visible"
             />
 
-    </androidx.cardview.widget.CardView>
 
-    <androidx.cardview.widget.CardView
-        android:id="@+id/card_view3"
-        android:layout_below="@+id/card_view2"
+        <TextView
+            android:id="@+id/receive_message_time_text_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="5:30PM"
+            android:textColor="#000000"
+            android:layout_below="@+id/receive_message_text_view"
+            android:textSize="12sp"
+            android:layout_marginTop="-5dp"
+            android:layout_marginStart="6dp"
+            android:layout_marginBottom="4dp"
+            android:layout_marginEnd="5dp"
+            />
+
+
+    </RelativeLayout>
+
+
+    <RelativeLayout
+        android:id="@+id/send_message_root_layout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:cardCornerRadius="20dp"
-        app:cardElevation="8dp"
-        app:cardBackgroundColor="#DFE6E0"
-        android:layout_marginEnd="13dp"
+        android:layout_below="@+id/receive_message_root_layout"
+        android:layout_marginTop="5dp"
+        android:maxWidth="280dp"
+        android:layout_marginEnd="10dp"
         android:layout_alignParentEnd="true"
-        android:layout_marginTop="18dp"
-        android:layout_marginBottom="8dp"
+        android:background="@drawable/chat_send_message_background_style"
         >
+
         <TextView
             android:id="@+id/send_message_text_view"
-            android:layout_width="280dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="I am fine and same to you. What is weather today!!!"
-            android:padding="13dp"
+            android:text="How are you now???"
+            android:padding="6dp"
             android:textColor="#000000"
             android:textSize="16sp"
+            android:maxWidth="280dp"
             android:visibility="visible"
             />
 
-    </androidx.cardview.widget.CardView>
+        <TextView
+            android:id="@+id/send_message_time_text_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="AUG 12, 2020 5:30PM"
+            android:layout_below="@+id/send_message_text_view"
+            android:textSize="12sp"
+            android:textColor="#000000"
+            android:layout_marginTop="-5dp"
+            android:layout_marginStart="6dp"
+            android:layout_marginBottom="4dp"
+            android:visibility="visible"
+            android:layout_marginEnd="5dp"
+            />
+
+        <ImageView
+            android:id="@+id/message_seen_status_image_view"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_marginTop="-6dp"
+            android:layout_marginStart="0dp"
+            android:layout_marginBottom="4dp"
+            android:visibility="visible"
+            android:layout_marginEnd="5dp"
+            android:layout_toEndOf="@+id/send_message_time_text_view"
+            android:layout_below="@+id/send_message_text_view"
+
+            />
+
+    </RelativeLayout>
+
+
+
 
 
 </RelativeLayout>

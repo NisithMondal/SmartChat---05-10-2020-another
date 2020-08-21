@@ -130,7 +130,6 @@ public class FriendRequestFragment extends Fragment implements MyFriendRequestFr
                         adapter.notifyDataSetChanged();
                     }
                 }
-                Log.d("ABCD", "onChildChanged is called");
             }
 
             @Override

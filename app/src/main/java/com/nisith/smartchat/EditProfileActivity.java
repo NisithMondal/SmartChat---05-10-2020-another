@@ -11,6 +11,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -186,6 +187,7 @@ public class EditProfileActivity extends AppCompatActivity {
 
                 case R.id.camera_image_view:
                     openGallery();
+//                    updateProfileButton.setVisibility(View.VISIBLE);
                     break;
 
                 case R.id.name_edit_icon:
@@ -255,6 +257,7 @@ public class EditProfileActivity extends AppCompatActivity {
                     profileImageBitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
                     profileImageByteArray = baos.toByteArray();
                     updateProfileButton.setVisibility(View.VISIBLE);
+                    Log.d("ZXCVB","updateProfileButton");
                 }
             } else if (resultCode == CropImage.CROP_IMAGE_ACTIVITY_RESULT_ERROR_CODE) {
                 Exception error = result.getError();

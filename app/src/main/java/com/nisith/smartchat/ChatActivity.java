@@ -1,46 +1,66 @@
 package com.nisith.smartchat;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import de.hdodenhof.circleimageview.CircleImageView;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.nisith.smartchat.Adapters.MyChatActivityRecyclerViewAdapter;
 import com.nisith.smartchat.Model.Friend;
 import com.nisith.smartchat.Model.GroupProfile;
+import com.nisith.smartchat.Model.Message;
 import com.nisith.smartchat.Model.UserProfile;
 import com.nisith.smartchat.Model.UserStatus;
 import com.squareup.picasso.Picasso;
 
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class ChatActivity extends AppCompatActivity {
 
     private Toolbar appToolbar;
     private ImageView backArrowImageView;
-    private RecyclerView recyclerView;
+    private RecyclerView chatRecyclerView;
     private CircleImageView profileImageView;
-    private TextView profileNameTextView, onlineStatusTextView;
+    private ImageView sendMessageImageView;
+    private EditText writeMessageEditText;
+    private TextView profileNameTextView, onlineStatusTextView, messageDateTextView;
     private String key; //key may be friend key or group key
     //Firebase
     private FirebaseUser currentUser;
-    private DatabaseReference userDatabaseRef, groupsDatabaseRef, currentUserFriendsDatabaseRef, friendStatusDatabaseRef;
+    private DatabaseReference userDatabaseRef, groupsDatabaseRef, currentUserFriendsDatabaseRef, friendStatusDatabaseRef, messagesDatabaseRef;
     private ValueEventListener valueEventListenerForFriend, valueEventListenerForGroup, friendStatusValueEventListener;
+
+    private ChildEventListener testValueEventListener;
+
+    private String messageSenderId, messageReceiverId, groupUid, friendType, profileImageUrl;
+    private List<Message> messageList;
+    private MyChatActivityRecyclerViewAdapter recyclerViewAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,11 +77,17 @@ public class ChatActivity extends AppCompatActivity {
         setTitle("");
         //Firebase
         currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        messageSenderId = currentUser.getUid();
         userDatabaseRef = FirebaseDatabase.getInstance().getReference().child("users");
         groupsDatabaseRef = FirebaseDatabase.getInstance().getReference().child("groups");
         String currentUserUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
         currentUserFriendsDatabaseRef = FirebaseDatabase.getInstance().getReference().child("friends").child(currentUserUid);
+        messagesDatabaseRef = FirebaseDatabase.getInstance().getReference().child("messages");
         fetchDataFromIntent();
+        messageList = new ArrayList<>();
+        setupRecyclerViewWithAdapter();
+        sendMessageImageView.setOnClickListener(new MyClickListener());
+        messageDateTextView.setVisibility(View.GONE);
     }
 
     private void initializeViews(){
@@ -70,17 +96,103 @@ public class ChatActivity extends AppCompatActivity {
       profileNameTextView = findViewById(R.id.profile_name_text_view);
       onlineStatusTextView = findViewById(R.id.friend_status_text_view);
       profileImageView = findViewById(R.id.profile_image_view);
-      recyclerView = findViewById(R.id.recycler_view);
+      chatRecyclerView = findViewById(R.id.chat_recycler_view);
+      writeMessageEditText = findViewById(R.id.message_edit_text);
+      sendMessageImageView = findViewById(R.id.send_message_image_view);
+      messageDateTextView = findViewById(R.id.message_date_text_view);
     }
 
     private void fetchDataFromIntent(){
         Intent intent = getIntent();
         if (intent != null){
             key = intent.getStringExtra(Constant.KEY);
-//            userName = intent.getStringExtra(Constant.USER_NAME);
-//            profileImageUrl = intent.getStringExtra(Constant.PROFILE_IMAGE_URL);
         }
     }
+
+    private void setupRecyclerViewWithAdapter(){
+        recyclerViewAdapter = new MyChatActivityRecyclerViewAdapter(messageList, this);
+        chatRecyclerView.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
+        chatRecyclerView.setHasFixedSize(true);
+        chatRecyclerView.setAdapter(recyclerViewAdapter);
+
+    }
+
+
+
+    public void setMessageDateTextView(String date){
+        //set message date text view
+        messageDateTextView.setVisibility(View.VISIBLE);
+        messageDateTextView.setText(date);
+    }
+
+
+
+
+    private class MyClickListener implements View.OnClickListener{
+        @Override
+        public void onClick(View view) {
+            switch (view.getId()){
+                case R.id.send_message_image_view:
+                    //when send image view of chat activity is clicked
+                    sendMessage();
+                    break;
+            }
+
+        }
+    }
+
+
+    private void sendMessage(){
+        String message = writeMessageEditText.getText().toString();
+        if (TextUtils.isEmpty(message)){
+            //if edit text is empty
+            Toast.makeText(this, "Write you message...", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (friendType != null && key != null){
+            //means friend_uid and friend_type i.e. group_friend or private_friend is available...
+            if (friendType.equals(Constant.SINGLE_FRIEND)){
+                //means current user wants one to one chat
+                String messageType = "text";
+                sendPrivateChatMessageToServer(message, messageType);
+
+            }else if (friendType.equals(Constant.GROUP_FRIEND)){
+                //Means Current user wants group chat
+                sendGroupChatMessageToServer(message);
+            }
+
+        }
+
+    }
+
+
+    private void sendPrivateChatMessageToServer(String inputMessage, String messageType){
+        //This method send private i.e. one to one chat messages to server
+        Calendar calendar = Calendar.getInstance();
+        SimpleDateFormat date = new SimpleDateFormat("MMM dd, yyyy");
+        String currentDate = date.format(calendar.getTime());
+        SimpleDateFormat time = new SimpleDateFormat("hh:mm a");
+        String currentTime = time.format(calendar.getTime());
+        //create message to be sent
+        Message message = new Message(messageSenderId, messageType, inputMessage, false, currentDate, currentTime);
+        String messageKey = messagesDatabaseRef.child(messageSenderId).child(messageReceiverId).push().getKey();
+        Map<String, Object> messageMap = new HashMap<>();
+        messageMap.put(messageSenderId + "/" + messageReceiverId + "/" + messageKey, message);
+        messageMap.put(messageReceiverId + "/" + messageSenderId + "/" + messageKey, message);
+        messagesDatabaseRef.updateChildren(messageMap);
+        //After send message clear the edit text
+        writeMessageEditText.setText("");
+    }
+
+
+    private void sendGroupChatMessageToServer(String message){
+        //This method send group chat messages to server
+
+    }
+
+
+
 
     @Override
     protected void onStart() {
@@ -91,6 +203,11 @@ public class ChatActivity extends AppCompatActivity {
             Log.d("ASDFG", " Chat onStart is called");
         }
         setDataOnViews();
+        ////////////////////
+        if (messageReceiverId != null){
+            showChatMessages();
+        }
+
     }
 
 
@@ -121,7 +238,80 @@ public class ChatActivity extends AppCompatActivity {
         if (friendStatusDatabaseRef != null){
             friendStatusDatabaseRef.removeEventListener(friendStatusValueEventListener);
         }
+        ///////////////////////////////////////////////////////
+        messagesDatabaseRef.child(currentUser.getUid()).child(messageReceiverId).removeEventListener(testValueEventListener);
     }
+
+
+
+
+    private void showChatMessages(){
+        messageList.clear();
+       testValueEventListener = messagesDatabaseRef.child(currentUser.getUid()).child(messageReceiverId)
+                .addChildEventListener(new ChildEventListener() {
+                    @Override
+                    public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+                        if (snapshot.exists()) {
+                            Message message = snapshot.getValue(Message.class);
+                            if (message != null) {
+                                message.setMessageKey(snapshot.getKey());
+                                messageList.add(message);
+                                recyclerViewAdapter.notifyDataSetChanged();
+                                chatRecyclerView.smoothScrollToPosition(recyclerViewAdapter.getItemCount());
+                                setMessageReadStatus(message);
+                            }
+
+                        }
+                    }
+
+                    @Override
+                    public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+                        if (snapshot.exists()){
+                            Message message = snapshot.getValue(Message.class);
+                            message.setMessageKey(snapshot.getKey());
+                            if (message != null && message.isRead() && messageList.contains(message)){
+                                int elementPosition = messageList.indexOf(message);
+                                messageList.set(elementPosition, message);
+                                recyclerViewAdapter.notifyItemChanged(elementPosition);
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void onChildRemoved(@NonNull DataSnapshot snapshot) {
+
+                    }
+
+                    @Override
+                    public void onChildMoved(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+
+                    }
+                });
+    }
+
+
+
+    private void setMessageReadStatus(Message message){
+        String senderUid = message.getSenderUid();
+            if (senderUid.equals(messageReceiverId)  && ! message.isRead()){
+                //Means current user receive message from his friend. So set the message read status in both the messages
+                String messageKey = message.getMessageKey();
+                Map<String, Object> messageMap = new HashMap<>();
+                //current user read the received message
+                messageMap.put(messageSenderId + "/" + messageReceiverId + "/" + messageKey + "/" + "read", true);
+                messageMap.put(messageReceiverId + "/" + messageSenderId + "/" + messageKey + "/" + "read", true);
+                messagesDatabaseRef.updateChildren(messageMap);
+                Log.d("LKJHG","messageReceiverId = "+messageReceiverId);
+                Log.d("LKJHG","messageSenderUid = "+senderUid);
+        }
+    }
+
+
 
 
     private void updateUserStatus(boolean isOnline){
@@ -138,8 +328,6 @@ public class ChatActivity extends AppCompatActivity {
         if (key == null){
             return;
         }
-        //friend is online or not
-        fetchFriendOnlineStatus(key);
         currentUserFriendsDatabaseRef.child(key)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
@@ -147,11 +335,15 @@ public class ChatActivity extends AppCompatActivity {
                         if (snapshot.exists()){
                             Friend friend = snapshot.getValue(Friend.class);
                             if (friend != null){
-                                String friendType = friend.getFriendsType();
+                                friendType = friend.getFriendsType();
                                 if (friendType.equals(Constant.SINGLE_FRIEND)){
+                                    messageReceiverId = key;
                                     //means one to one friendship
                                     fetchFriendsData(key);
+                                    //friend is online or not
+                                    fetchFriendOnlineStatus(key);
                                 }else if (friendType.equals(Constant.GROUP_FRIEND)){
+                                    groupUid = key;
                                     //means group friendship
                                     fetchGroupData(key);
                                 }
@@ -180,12 +372,15 @@ public class ChatActivity extends AppCompatActivity {
                             if (userProfile != null) {
                                 String userName = userProfile.getUserName();
                                 profileNameTextView.setText(userName);
-                                String profileImageUrl = userProfile.getProfileImage();
+                                profileImageUrl = userProfile.getProfileImage();
                                 if (!profileImageUrl.equalsIgnoreCase("default")) {
                                     Picasso.get().load(profileImageUrl).placeholder(R.drawable.user_icon).into(profileImageView);
                                 } else {
                                     Picasso.get().load(R.drawable.user_icon).placeholder(R.drawable.user_icon).into(profileImageView);
                                 }
+                                ////////////////
+                                recyclerViewAdapter.setProfileImageUrl(profileImageUrl);
+                                showChatMessages();
                             }
                         }
                     }
@@ -237,7 +432,7 @@ public class ChatActivity extends AppCompatActivity {
                             if (groupProfile != null) {
                                 String groupName = groupProfile.getGroupName();
                                 profileNameTextView.setText(groupName);
-                                onlineStatusTextView.setText("online");
+                                onlineStatusTextView.setText("group");
                                 String profileImageUrl = groupProfile.getGroupProfileImage();
                                 if (!profileImageUrl.equalsIgnoreCase("default")) {
                                     Picasso.get().load(profileImageUrl).placeholder(R.drawable.ic_group_icon_white).into(profileImageView);
