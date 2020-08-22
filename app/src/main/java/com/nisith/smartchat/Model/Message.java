@@ -66,8 +66,6 @@ public class Message {
                 result = true;
             }
         }
-
-
         return result;
     }
 

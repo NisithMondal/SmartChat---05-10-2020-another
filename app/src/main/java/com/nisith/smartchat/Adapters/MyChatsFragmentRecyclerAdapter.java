@@ -1,5 +1,6 @@
 package com.nisith.smartchat.Adapters;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,8 +16,12 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.nisith.smartchat.Constant;
+import com.nisith.smartchat.Fragments.ChatFragment;
+import com.nisith.smartchat.HomeActivity;
 import com.nisith.smartchat.Model.Friend;
 import com.nisith.smartchat.Model.GroupProfile;
+import com.nisith.smartchat.Model.Message;
+import com.nisith.smartchat.Model.UnreadMessagesModel;
 import com.nisith.smartchat.Model.UserProfile;
 import com.nisith.smartchat.Model.ValueEventListenerModel;
 import com.nisith.smartchat.R;
@@ -35,21 +40,27 @@ public class MyChatsFragmentRecyclerAdapter extends FirebaseRecyclerAdapter<Frie
         void onViewClick(View view, String key);  //key may be friend key or group key
     }
 
+    private ChatFragment chatFragment;
     private String currentUserUid;
-    private DatabaseReference userDatabaseRef, groupDatabaseRef;
+    private DatabaseReference userDatabaseRef, groupDatabaseRef, messagesDatabaseRef;
     private OnChatsFragmentViewsClickListener chatsCardViewsClickListener;
+    private List<UnreadMessagesModel> unreadMessagesModelList;
     private List<ValueEventListenerModel> removeListenerFromSingleFriendList; //value event listener for friends key
-    private List<ValueEventListenerModel> removeListenerFromGroupFriendList; //value event listener for groups key
+    private List<ValueEventListenerModel> removeListenerFromGroupFriendList, removeValueEventListenerFromUnreadMessagesForFriends; //value event listener for groups key
 
-    public MyChatsFragmentRecyclerAdapter(@NonNull FirebaseRecyclerOptions<Friend> options, OnChatsFragmentViewsClickListener chatsCardViewsClickListener) {
+    public MyChatsFragmentRecyclerAdapter(@NonNull FirebaseRecyclerOptions<Friend> options, ChatFragment chatFragment) {
 
         super(options);
-        this.chatsCardViewsClickListener = chatsCardViewsClickListener;
+        this.chatsCardViewsClickListener = chatFragment;
+        this.chatFragment = chatFragment;
         userDatabaseRef = FirebaseDatabase.getInstance().getReference().child("users");
         groupDatabaseRef = FirebaseDatabase.getInstance().getReference().child("groups");
+        messagesDatabaseRef = FirebaseDatabase.getInstance().getReference().child("messages");
         currentUserUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        unreadMessagesModelList = new ArrayList<>();
         this.removeListenerFromSingleFriendList = new ArrayList<>();
         this.removeListenerFromGroupFriendList = new ArrayList<>();
+        this.removeValueEventListenerFromUnreadMessagesForFriends = new ArrayList<>();
     }
 
     @NonNull
@@ -64,6 +75,8 @@ public class MyChatsFragmentRecyclerAdapter extends FirebaseRecyclerAdapter<Frie
         if (friend.getFriendsType().equals(Constant.SINGLE_FRIEND)) {
             // this means value event listener is add on one to one friend chat
             final String userKey = getRef(position).getKey();
+            holder.totalUnreadMessageTextView.setVisibility(View.GONE);
+            getTotalUnreadMessages(userKey, holder);
             ValueEventListener valueEventListener = userDatabaseRef.child(userKey)
                     .addValueEventListener(new ValueEventListener() {
                         @Override
@@ -126,6 +139,53 @@ public class MyChatsFragmentRecyclerAdapter extends FirebaseRecyclerAdapter<Frie
     }
 
 
+    private void getTotalUnreadMessages(final String messageReceiverUid, final MyViewHolder holder){
+    //This method will give us all unread messages number of every single friend. This method will not give unread messages for group...
+     String messageSenderUid = currentUserUid;
+     ValueEventListener  valueEventListener = messagesDatabaseRef.child(messageSenderUid).child(messageReceiverUid).orderByChild("read").equalTo(false)
+                .addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                       int count = 0;
+                       for (DataSnapshot snapshot1 : snapshot.getChildren()){
+                           Message message = snapshot1.getValue(Message.class);
+                           if (message != null){
+                               if (message.getSenderUid().equals(messageReceiverUid)){
+                                   //if current user receive messages which are not still read by him.
+                                   count++;
+                               }
+                           }
+                       }
+                       if (count != 0) {
+                           holder.totalUnreadMessageTextView.setVisibility(View.VISIBLE);
+                           holder.totalUnreadMessageTextView.setText("" + count);
+                       }else {
+                           holder.totalUnreadMessageTextView.setVisibility(View.GONE);
+                       }
+                        UnreadMessagesModel unreadMessagesModel = new UnreadMessagesModel(messageReceiverUid, count);
+                        if (unreadMessagesModelList.contains(unreadMessagesModel)){
+                            unreadMessagesModelList.set(unreadMessagesModelList.indexOf(unreadMessagesModel), unreadMessagesModel);
+                        }else {
+                            unreadMessagesModelList.add(unreadMessagesModel);
+                        }
+                        int totalUnreadMessages = 0;
+                        for (UnreadMessagesModel model : unreadMessagesModelList){
+                            totalUnreadMessages = totalUnreadMessages + model.getTotalUnreadMessages();
+                        }
+                        chatFragment.setTotalUnreadMessages(""+totalUnreadMessages);
+                        Log.d("ABCDEF",messageReceiverUid + "unread messages = "+totalUnreadMessages);
+
+
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+
+                    }
+                });
+     removeValueEventListenerFromUnreadMessagesForFriends.add(new ValueEventListenerModel(messageReceiverUid, valueEventListener));
+    }
+
     public void removeValueEventListener(){
         //remove all value event listener from friends
         for (ValueEventListenerModel model : removeListenerFromSingleFriendList){
@@ -137,12 +197,19 @@ public class MyChatsFragmentRecyclerAdapter extends FirebaseRecyclerAdapter<Frie
             groupDatabaseRef.child(model.getKey()).removeEventListener(model.getValueEventListener());
         }
         removeListenerFromGroupFriendList.clear();
+
+        for (ValueEventListenerModel model : removeValueEventListenerFromUnreadMessagesForFriends) {
+            messagesDatabaseRef.child(currentUserUid).child(model.getKey()).removeEventListener(model.getValueEventListener());
+        }
+        removeValueEventListenerFromUnreadMessagesForFriends.clear();
+        /////////////////////////////////////
+        unreadMessagesModelList.clear();
     }
 
 
     class MyViewHolder extends RecyclerView.ViewHolder{
         CircleImageView profileImageView;
-        TextView profileNameTextView, lastMessageTextView, lastSeenTextView;
+        TextView profileNameTextView, lastMessageTextView, lastSeenTextView, totalUnreadMessageTextView;
         ImageView onlineStateImageView;
         public MyViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -150,6 +217,7 @@ public class MyChatsFragmentRecyclerAdapter extends FirebaseRecyclerAdapter<Frie
             profileNameTextView = itemView.findViewById(R.id.user_name_text_view);
             lastMessageTextView = itemView.findViewById(R.id.last_message_text_view);
             lastSeenTextView = itemView.findViewById(R.id.last_seen_text_view);
+            totalUnreadMessageTextView = itemView.findViewById(R.id.total_unread_message_text_view);
             onlineStateImageView = itemView.findViewById(R.id.online_state_image_view);
 
             //Click Listeners

@@ -13,9 +13,11 @@ import androidx.viewpager.widget.ViewPager;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -44,6 +46,9 @@ public class HomeActivity extends AppCompatActivity {
     private FirebaseAuth firebaseAuth;
     private FirebaseUser currentUser;
 
+    //////////////////////////////////////
+    TextView totalUnreadMessageTextView;
+
 
 
     @Override
@@ -58,6 +63,7 @@ public class HomeActivity extends AppCompatActivity {
         //Firebase
         firebaseAuth = FirebaseAuth.getInstance();
         currentUser = firebaseAuth.getCurrentUser();
+
 
     }
 
@@ -101,6 +107,24 @@ public class HomeActivity extends AppCompatActivity {
         }
     }
 
+    public void setTabLayoutUnreadMessageCount(String totalUnreadMessages){
+        if (totalUnreadMessageTextView == null){
+            setBadgeView();
+        }
+        totalUnreadMessageTextView.setText(totalUnreadMessages);
+    }
+
+    private void setBadgeView(){
+        TabLayout.Tab tab = tabLayout.getTabAt(0);
+        if (tab != null) {
+            LayoutInflater layoutInflater = getLayoutInflater();
+            View view = layoutInflater.inflate(R.layout.badge_view, null);
+            totalUnreadMessageTextView = view.findViewById(R.id.total_unread_message_text_view);
+            TextView tabHeadingTextView = view.findViewById(R.id.tab_heading_text_view);
+            tab.setCustomView(view);
+        }
+    }
+
 
     private void updateUserStatus(boolean isOnline){
         Map<String, Object> userStatusMap = new HashMap<>();
@@ -109,6 +133,7 @@ public class HomeActivity extends AppCompatActivity {
         userStatusMap.put("users_detail_info" + "/" + currentUser.getUid() + "/" + "userStatus", userStatus);
         //update user's states
         rootDatabaseRef.updateChildren(userStatusMap);
+
     }
 
 

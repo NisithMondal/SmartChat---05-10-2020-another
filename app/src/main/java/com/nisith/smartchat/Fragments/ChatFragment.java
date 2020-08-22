@@ -25,6 +25,7 @@ import com.nisith.smartchat.ChatActivity;
 import com.nisith.smartchat.Constant;
 import com.nisith.smartchat.DialogBox.FriendImageClickDialog;
 import com.nisith.smartchat.FriendsProfileActivity;
+import com.nisith.smartchat.HomeActivity;
 import com.nisith.smartchat.Model.Friend;
 import com.nisith.smartchat.R;
 public class ChatFragment extends Fragment implements MyChatsFragmentRecyclerAdapter.OnChatsFragmentViewsClickListener {
@@ -33,6 +34,7 @@ public class ChatFragment extends Fragment implements MyChatsFragmentRecyclerAda
     private MyChatsFragmentRecyclerAdapter adapter;
     //Firebase
     private DatabaseReference friendsDatabaseRef;
+    private HomeActivity homeActivity;
 
     public ChatFragment() {
         // Required empty public constructor
@@ -54,6 +56,7 @@ public class ChatFragment extends Fragment implements MyChatsFragmentRecyclerAda
         String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
         friendsDatabaseRef = FirebaseDatabase.getInstance().getReference().child("friends").child(currentUserId);
         setUpRecyclerViewWithAdapter();
+        this.homeActivity = (HomeActivity) getActivity();
 
     }
 
@@ -68,6 +71,12 @@ public class ChatFragment extends Fragment implements MyChatsFragmentRecyclerAda
         recyclerView.setAdapter(adapter);
     }
 
+
+    public void setTotalUnreadMessages(String totalUnreadMessages){
+        if (homeActivity != null){
+            homeActivity.setTabLayoutUnreadMessageCount(totalUnreadMessages);
+        }
+    }
 
     @Override
     public void onStart() {
