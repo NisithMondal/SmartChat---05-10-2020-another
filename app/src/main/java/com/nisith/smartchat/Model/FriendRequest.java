@@ -15,17 +15,19 @@ public class FriendRequest {
     private String groupKey;// key may be friend key or group key
     private  String senderOrReceiverUid;
     private long timeStamp;
+    private boolean read;// User seen the received friend request or not...
 
     public FriendRequest(){
 
     }
 
-    public FriendRequest(String requestType, boolean isGroup, String groupKey, String senderOrReceiverUid, long timeStamp) {
+    public FriendRequest(String requestType, boolean isGroup, String groupKey, String senderOrReceiverUid, long timeStamp, boolean read) {
         this.requestType = requestType;
         this.group = isGroup;
         this.groupKey = groupKey;
         this.senderOrReceiverUid = senderOrReceiverUid;
         this.timeStamp = timeStamp;
+        this.read = read;
 
     }
 
@@ -49,6 +51,9 @@ public class FriendRequest {
         return timeStamp;
     }
 
+    public boolean isRead() {
+        return read;
+    }
 
     @Override
     public boolean equals(Object object) {

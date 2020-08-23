@@ -244,8 +244,8 @@ public class AcceptDeclineGroupRequestActivity extends AppCompatActivity {
     private void joinGroup(){
         //if current user join this group i.e. accept group request
         Map<String, Object> map = new HashMap<>();
-        map.put(requestSenderUid+"/"+requestReceiverUid + groupKey, new FriendRequest(Constant.FRIEND,true, groupKey,requestReceiverUid, System.currentTimeMillis()));
-        map.put(requestReceiverUid+"/"+requestSenderUid + groupKey, new FriendRequest(Constant.FRIEND, true, groupKey,requestSenderUid, System.currentTimeMillis()));
+        map.put(requestSenderUid+"/"+requestReceiverUid + groupKey, new FriendRequest(Constant.FRIEND,true, groupKey,requestReceiverUid, System.currentTimeMillis(), true));
+        map.put(requestReceiverUid+"/"+requestSenderUid + groupKey, new FriendRequest(Constant.FRIEND, true, groupKey,requestSenderUid, System.currentTimeMillis(), true));
         friendRequestDatabaseRef.updateChildren(map, new DatabaseReference.CompletionListener() {
             @Override
             public void onComplete(@Nullable DatabaseError error, @NonNull DatabaseReference ref) {

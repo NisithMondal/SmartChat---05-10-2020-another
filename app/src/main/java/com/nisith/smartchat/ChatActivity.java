@@ -53,13 +53,15 @@ public class ChatActivity extends AppCompatActivity {
     private String key; //key may be friend key or group key
     //Firebase
     private FirebaseUser currentUser;
-    private DatabaseReference userDatabaseRef, groupsDatabaseRef, currentUserFriendsDatabaseRef, friendStatusDatabaseRef, messagesDatabaseRef;
+    private DatabaseReference userDatabaseRef, groupsDatabaseRef, groupFriendsDatabaseRef, currentUserFriendsDatabaseRef, friendStatusDatabaseRef, messagesDatabaseRef;
     private ValueEventListener valueEventListenerForFriend, valueEventListenerForGroup, friendStatusValueEventListener;
 
     private ChildEventListener testValueEventListener;
+    private ChildEventListener totalGroupFriendsChildEventListener;
 
     private String messageSenderId, messageReceiverId, groupUid, friendType, profileImageUrl;
     private List<Message> messageList;
+    private List<String> totalGroupFriendsList; // Contains all the friend's uid of a particular group...
     private MyChatActivityRecyclerViewAdapter recyclerViewAdapter;
 
     @Override
@@ -80,11 +82,13 @@ public class ChatActivity extends AppCompatActivity {
         messageSenderId = currentUser.getUid();
         userDatabaseRef = FirebaseDatabase.getInstance().getReference().child("users");
         groupsDatabaseRef = FirebaseDatabase.getInstance().getReference().child("groups");
+        groupFriendsDatabaseRef = FirebaseDatabase.getInstance().getReference().child("group_friends");
         String currentUserUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
         currentUserFriendsDatabaseRef = FirebaseDatabase.getInstance().getReference().child("friends").child(currentUserUid);
         messagesDatabaseRef = FirebaseDatabase.getInstance().getReference().child("messages");
         fetchDataFromIntent();
         messageList = new ArrayList<>();
+        totalGroupFriendsList = new ArrayList<>();
         setupRecyclerViewWithAdapter();
         sendMessageImageView.setOnClickListener(new MyClickListener());
         messageDateTextView.setVisibility(View.GONE);
@@ -159,7 +163,7 @@ public class ChatActivity extends AppCompatActivity {
 
             }else if (friendType.equals(Constant.GROUP_FRIEND)){
                 //Means Current user wants group chat
-                sendGroupChatMessageToServer(message);
+                sendGroupChatMessageToServer(message, "text");
             }
 
         }
@@ -186,10 +190,33 @@ public class ChatActivity extends AppCompatActivity {
     }
 
 
-    private void sendGroupChatMessageToServer(String message){
+    private void sendGroupChatMessageToServer(String inputMessage, String messageType){
         //This method send group chat messages to server
+        Calendar calendar = Calendar.getInstance();
+        SimpleDateFormat date = new SimpleDateFormat("MMM dd, yyyy");
+        String currentDate = date.format(calendar.getTime());
+        SimpleDateFormat time = new SimpleDateFormat("hh:mm a");
+        String currentTime = time.format(calendar.getTime());
+        if (totalGroupFriendsList != null){
+            String groupKey = key;
+            //create message to be sent
+            Message groupMessage = new Message(messageSenderId, messageType, inputMessage, false, currentDate, currentTime);
+            String messageKey = messagesDatabaseRef.child(messageSenderId).child(groupKey).push().getKey();
+            Map<String, Object> groupMessageMap = new HashMap<>();
+            //write this message to all of the group friend's message node. The current user is also present in 'totalGroupFriendsList' list.
+            for (String friendKey : totalGroupFriendsList) {
+                groupMessageMap.put(friendKey + "/" + groupKey + "/" + messageKey, groupMessage);
+            }
+            messagesDatabaseRef.updateChildren(groupMessageMap);
+            //After send message clear the edit text
+            writeMessageEditText.setText("");
+
+        }else {
+            Toast.makeText(this, "Message not send", Toast.LENGTH_SHORT).show();
+        }
 
     }
+
 
 
 
@@ -200,7 +227,9 @@ public class ChatActivity extends AppCompatActivity {
         if (currentUser != null){
             //Current user is already logged in
             updateUserStatus(true);
-            Log.d("ASDFG", " Chat onStart is called");
+        }
+        if (totalGroupFriendsList != null){
+            totalGroupFriendsList.clear();
         }
         setDataOnViews();
         ////////////////////
@@ -238,8 +267,19 @@ public class ChatActivity extends AppCompatActivity {
         if (friendStatusDatabaseRef != null){
             friendStatusDatabaseRef.removeEventListener(friendStatusValueEventListener);
         }
+        if (totalGroupFriendsList != null){
+            totalGroupFriendsList.clear();
+        }
+        //For one to oen chat 'totalGroupFriendsChildEventListener' will be null...
+        if (totalGroupFriendsChildEventListener != null){
+            //remove child event listener from getTotalGroupFriends
+            //This condition will only true for group chat
+            String groupKey = key; //here key means groupKey
+            groupFriendsDatabaseRef.child(groupKey).removeEventListener(totalGroupFriendsChildEventListener);
+        }
         ///////////////////////////////////////////////////////
-        messagesDatabaseRef.child(currentUser.getUid()).child(messageReceiverId).removeEventListener(testValueEventListener);
+
+            messagesDatabaseRef.child(currentUser.getUid()).child(key).removeEventListener(testValueEventListener);
     }
 
 
@@ -247,7 +287,7 @@ public class ChatActivity extends AppCompatActivity {
 
     private void showChatMessages(){
         messageList.clear();
-       testValueEventListener = messagesDatabaseRef.child(currentUser.getUid()).child(messageReceiverId)
+       testValueEventListener = messagesDatabaseRef.child(currentUser.getUid()).child(key)
                 .addChildEventListener(new ChildEventListener() {
                     @Override
                     public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
@@ -258,7 +298,11 @@ public class ChatActivity extends AppCompatActivity {
                                 messageList.add(message);
                                 recyclerViewAdapter.notifyDataSetChanged();
                                 chatRecyclerView.smoothScrollToPosition(recyclerViewAdapter.getItemCount());
-                                setMessageReadStatus(message);
+                                if (friendType.equals(Constant.SINGLE_FRIEND)) {
+                                    setMessageReadStatusForOneToOneChat(message);
+                                }else if (friendType.equals(Constant.GROUP_FRIEND)){
+                                    setMessageReadStatusForGroupChat(message, key);
+                                }
                             }
 
                         }
@@ -267,13 +311,15 @@ public class ChatActivity extends AppCompatActivity {
                     @Override
                     public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
                         if (snapshot.exists()){
-                            Message message = snapshot.getValue(Message.class);
-                            message.setMessageKey(snapshot.getKey());
-                            if (message != null && message.isRead() && messageList.contains(message)){
-                                int elementPosition = messageList.indexOf(message);
-                                messageList.set(elementPosition, message);
-                                recyclerViewAdapter.notifyItemChanged(elementPosition);
-                            }
+                                Message message = snapshot.getValue(Message.class);
+                                if (message != null) {
+                                    message.setMessageKey(snapshot.getKey());
+                                    if (message.isRead() && messageList.contains(message)) {
+                                        int elementPosition = messageList.indexOf(message);
+                                        messageList.set(elementPosition, message);
+                                        recyclerViewAdapter.notifyItemChanged(elementPosition);
+                                    }
+                                }
                         }
                     }
 
@@ -296,7 +342,7 @@ public class ChatActivity extends AppCompatActivity {
 
 
 
-    private void setMessageReadStatus(Message message){
+    private void setMessageReadStatusForOneToOneChat(Message message){
         String senderUid = message.getSenderUid();
             if (senderUid.equals(messageReceiverId)  && ! message.isRead()){
                 //Means current user receive message from his friend. So set the message read status in both the messages
@@ -306,11 +352,24 @@ public class ChatActivity extends AppCompatActivity {
                 messageMap.put(messageSenderId + "/" + messageReceiverId + "/" + messageKey + "/" + "read", true);
                 messageMap.put(messageReceiverId + "/" + messageSenderId + "/" + messageKey + "/" + "read", true);
                 messagesDatabaseRef.updateChildren(messageMap);
-                Log.d("LKJHG","messageReceiverId = "+messageReceiverId);
-                Log.d("LKJHG","messageSenderUid = "+senderUid);
         }
     }
 
+
+    private void setMessageReadStatusForGroupChat(Message message, String groupKey){
+        String groupMessageSenderUid = message.getSenderUid();
+        String currentUserId = messageSenderId;
+        if (! groupMessageSenderUid.equals(currentUserId) && ! message.isRead()){
+            //if message sender id is not equal to current user id. Means current user send the message
+            String messageKey = message.getMessageKey();
+            Map<String, Object> messageMap = new HashMap<>();
+            //current user read the received message
+            messageMap.put(currentUserId + "/" + groupKey + "/" + messageKey + "/" + "read", true);
+            messageMap.put(groupMessageSenderUid + "/" + groupKey + "/" + messageKey + "/" + "read", true);
+            messagesDatabaseRef.updateChildren(messageMap);
+        }
+
+    }
 
 
 
@@ -336,6 +395,8 @@ public class ChatActivity extends AppCompatActivity {
                             Friend friend = snapshot.getValue(Friend.class);
                             if (friend != null){
                                 friendType = friend.getFriendsType();
+                                //set friend type in recycler view adapter class
+                                recyclerViewAdapter.setFriendType(friendType);
                                 if (friendType.equals(Constant.SINGLE_FRIEND)){
                                     messageReceiverId = key;
                                     //means one to one friendship
@@ -346,6 +407,7 @@ public class ChatActivity extends AppCompatActivity {
                                     groupUid = key;
                                     //means group friendship
                                     fetchGroupData(key);
+                                    getTotalFriendsFromGroup(key);
                                 }
                             }
                         }
@@ -359,6 +421,46 @@ public class ChatActivity extends AppCompatActivity {
     }
 
 
+
+
+    private void getTotalFriendsFromGroup(String groupKey){
+        if (groupKey != null){
+            totalGroupFriendsChildEventListener = groupFriendsDatabaseRef.child(groupKey)
+                    .addChildEventListener(new ChildEventListener() {
+                        @Override
+                        public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+                            if (snapshot.exists()){
+                                //add all group friends uid
+                                totalGroupFriendsList.add(snapshot.getKey());
+                            }
+                        }
+
+                        @Override
+                        public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+
+                        }
+
+                        @Override
+                        public void onChildRemoved(@NonNull DataSnapshot snapshot) {
+                            if (snapshot.exists()){
+                                String key = snapshot.getKey();
+                                totalGroupFriendsList.remove(key);
+                            }
+
+                        }
+
+                        @Override
+                        public void onChildMoved(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError error) {
+
+                        }
+                    });
+        }
+    }
 
 
 
@@ -439,6 +541,9 @@ public class ChatActivity extends AppCompatActivity {
                                 } else {
                                     Picasso.get().load(R.drawable.ic_group_icon_white).placeholder(R.drawable.ic_group_icon_white).into(profileImageView);
                                 }
+                                /////////////////////
+                                showChatMessages();
+
                             }
                         }
                     }

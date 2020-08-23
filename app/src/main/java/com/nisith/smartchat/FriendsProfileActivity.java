@@ -251,8 +251,9 @@ import java.util.Map;
             //Current user wants to send friend request to this friend
             Map<String, Object> dataMap = new HashMap<>();
             //send request for single i.e. for one to one chat friendship
-            dataMap.put(requestSenderUid + "/" + requestReceiverUid, new FriendRequest(Constant.SEND_REQUEST, false, "",requestReceiverUid, System.currentTimeMillis()));
-            dataMap.put(requestReceiverUid + "/" + requestSenderUid, new FriendRequest(Constant.RECEIVE_REQUEST,false, "",requestSenderUid, System.currentTimeMillis()));
+            //here 'read' is false means current user send the notification to his friends which is not yet seen by his/her friend
+            dataMap.put(requestSenderUid + "/" + requestReceiverUid, new FriendRequest(Constant.SEND_REQUEST, false, "",requestReceiverUid, System.currentTimeMillis(), false));
+            dataMap.put(requestReceiverUid + "/" + requestSenderUid, new FriendRequest(Constant.RECEIVE_REQUEST,false, "",requestSenderUid, System.currentTimeMillis(), false));
             requestStatus = Constant.SEND_REQUEST;
             friendRequestDatabaseRef.updateChildren(dataMap);
 
@@ -269,8 +270,9 @@ import java.util.Map;
 
      private void acceptFriendRequest(){
         Map<String, Object> map = new HashMap<>();
-        map.put(requestSenderUid+"/"+requestReceiverUid,new FriendRequest(Constant.FRIEND,false, "", requestReceiverUid, System.currentTimeMillis()));
-        map.put(requestReceiverUid+"/"+requestSenderUid,new FriendRequest(Constant.FRIEND, false, "",requestSenderUid, System.currentTimeMillis()));
+         //here 'read' is true means user seen the notification
+        map.put(requestSenderUid+"/"+requestReceiverUid,new FriendRequest(Constant.FRIEND,false, "", requestReceiverUid, System.currentTimeMillis(), true));
+        map.put(requestReceiverUid+"/"+requestSenderUid,new FriendRequest(Constant.FRIEND, false, "",requestSenderUid, System.currentTimeMillis(), true));
         friendRequestDatabaseRef.updateChildren(map, new DatabaseReference.CompletionListener() {
             @Override
             public void onComplete(@Nullable DatabaseError error, @NonNull DatabaseReference ref) {

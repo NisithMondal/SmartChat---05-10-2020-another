@@ -1,18 +1,13 @@
 package com.nisith.smartchat;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentTransaction;
 import androidx.viewpager.widget.PagerAdapter;
 import androidx.viewpager.widget.ViewPager;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -24,17 +19,19 @@ import android.widget.Toast;
 import com.google.android.material.tabs.TabLayout;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.nisith.smartchat.Adapters.MyPagerAdapter;
+import com.nisith.smartchat.Model.FriendRequest;
 import com.nisith.smartchat.Model.UserStatus;
 
-import java.io.FileDescriptor;
-import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 public class HomeActivity extends AppCompatActivity {
 
@@ -45,9 +42,13 @@ public class HomeActivity extends AppCompatActivity {
     //Firebase
     private FirebaseAuth firebaseAuth;
     private FirebaseUser currentUser;
+    private DatabaseReference friendRequestRootDatabaseRef;
+    private ValueEventListener unseenFriendRequestValueEventListener;
+    private View badgeViewForChats, badgeViewForRequests;
+    private TextView badgeHeadingTextViewForChats, badgeItemsTextViewForChats;
+    private TextView badgeHeadingTextViewForRequests, badgeItemsTextViewForRequests;
 
-    //////////////////////////////////////
-    TextView totalUnreadMessageTextView;
+    private List<String> unseenFriendRequestKeyList;
 
 
 
@@ -63,8 +64,34 @@ public class HomeActivity extends AppCompatActivity {
         //Firebase
         firebaseAuth = FirebaseAuth.getInstance();
         currentUser = firebaseAuth.getCurrentUser();
+        unseenFriendRequestKeyList = new ArrayList<>();
+        tabLayout.addOnTabSelectedListener(new TabLayout.BaseOnTabSelectedListener() {
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {
+                if (tab.getPosition() == 3){
+                    /* Means 'REQUESTS' tab is selected. To hide unseen requests count badge from tab layout,
+                      we simply update 'read' field in database to 'true' */
+                    if (friendRequestRootDatabaseRef != null && unseenFriendRequestKeyList.size()>0) {
+                        Map<String, Object> updateMap = new HashMap<>();
+                        String currentUserId = currentUser.getUid();
+                        for (String key : unseenFriendRequestKeyList) {
+                            updateMap.put(currentUserId + "/" + key + "/" + "read", true);
+                        }
+                        friendRequestRootDatabaseRef.updateChildren(updateMap);
+                    }
+                }
+            }
 
+            @Override
+            public void onTabUnselected(TabLayout.Tab tab) {
 
+            }
+
+            @Override
+            public void onTabReselected(TabLayout.Tab tab) {
+
+            }
+        });
     }
 
 
@@ -92,9 +119,11 @@ public class HomeActivity extends AppCompatActivity {
             openLoginActivity();
             finish();
         }else {
+            friendRequestRootDatabaseRef = FirebaseDatabase.getInstance().getReference().child("friend_requests");
             //Current user is already logged in
             updateUserStatus(true);
-            Log.d("ASDFG", " Home onStart is called");
+            //Count total unseen friend requests received by the current user and set it in 'requests' tab
+            getTotalUnSeenFriendRequest();
         }
     }
 
@@ -107,22 +136,43 @@ public class HomeActivity extends AppCompatActivity {
         }
     }
 
-    public void setTabLayoutUnreadMessageCount(String totalUnreadMessages){
-        if (totalUnreadMessageTextView == null){
-            setBadgeView();
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (friendRequestRootDatabaseRef != null && unseenFriendRequestValueEventListener != null){
+            friendRequestRootDatabaseRef.child(currentUser.getUid()).removeEventListener(unseenFriendRequestValueEventListener);
         }
-        totalUnreadMessageTextView.setText(totalUnreadMessages);
     }
 
-    private void setBadgeView(){
-        TabLayout.Tab tab = tabLayout.getTabAt(0);
-        if (tab != null) {
-            LayoutInflater layoutInflater = getLayoutInflater();
-            View view = layoutInflater.inflate(R.layout.badge_view, null);
-            totalUnreadMessageTextView = view.findViewById(R.id.total_unread_message_text_view);
-            TextView tabHeadingTextView = view.findViewById(R.id.tab_heading_text_view);
-            tab.setCustomView(view);
+    public void setTotalUnreadChatsInTabLayout(String totalUnreadChats, int visibility){
+        //Set badge view for 'CHATS' tab
+        if (badgeViewForChats == null){
+            createBadgeViewForChatsTab();
         }
+        TabLayout.Tab tab = tabLayout.getTabAt(0);
+        if (tab != null){
+            tab.setCustomView(badgeViewForChats);
+            badgeHeadingTextViewForChats.setText("CHATS");
+            badgeItemsTextViewForChats.setText(totalUnreadChats);
+            badgeItemsTextViewForChats.setVisibility(visibility);
+        }
+
+    }
+
+    private void createBadgeViewForChatsTab(){
+            LayoutInflater layoutInflater = getLayoutInflater();
+            badgeViewForChats = layoutInflater.inflate(R.layout.badge_view, null);
+            badgeItemsTextViewForChats = badgeViewForChats.findViewById(R.id.badge_items_text_view);
+            badgeHeadingTextViewForChats = badgeViewForChats.findViewById(R.id.badge_heading_text_view);
+    }
+
+    public int getSelectedTabPosition(){
+        //Return the current selected tab position
+        int position = 0;
+        if (tabLayout != null){
+            position = tabLayout.getSelectedTabPosition();
+        }
+        return position;
     }
 
 
@@ -133,9 +183,65 @@ public class HomeActivity extends AppCompatActivity {
         userStatusMap.put("users_detail_info" + "/" + currentUser.getUid() + "/" + "userStatus", userStatus);
         //update user's states
         rootDatabaseRef.updateChildren(userStatusMap);
-
     }
 
+
+    private void getTotalUnSeenFriendRequest(){
+        unseenFriendRequestValueEventListener = friendRequestRootDatabaseRef.child(currentUser.getUid()).orderByChild("read").equalTo(false)
+                .addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        int totalUnseenFriendRequest = 0;
+                        unseenFriendRequestKeyList.clear();
+                        //If total children is '0', then snapshot.exists() will 'false'...
+                        if (snapshot.exists()) {
+                            for (DataSnapshot mySnapshot : snapshot.getChildren()){
+                                FriendRequest friendRequest = mySnapshot.getValue(FriendRequest.class);
+                                if (friendRequest != null){
+                                    unseenFriendRequestKeyList.add(mySnapshot.getKey());
+                                    if (friendRequest.getRequestType().equals(Constant.RECEIVE_REQUEST)){
+                                        totalUnseenFriendRequest++;
+                                    }
+                                }
+                            }
+                        }
+                        //set total unread friend requests count into ''REQUESTS' tab
+                        if (totalUnseenFriendRequest != 0) {
+                            setTotalUnseenFriendRequestNumberInTabLayout(String.valueOf(totalUnseenFriendRequest), View.VISIBLE);
+                        }else {
+                            setTotalUnseenFriendRequestNumberInTabLayout(String.valueOf(totalUnseenFriendRequest), View.GONE);
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+
+                    }
+                });
+    }
+
+
+    private void setTotalUnseenFriendRequestNumberInTabLayout(String totalUnseenRequests, int visibility){
+        //set badge in 'REQUESTS' tab
+        if (badgeViewForRequests == null){
+            createBadgeViewForRequestsTab();
+        }
+        TabLayout.Tab tab = tabLayout.getTabAt(3);
+        if (tab != null){
+            tab.setCustomView(badgeViewForRequests);
+            badgeHeadingTextViewForRequests.setText("REQUESTS");
+            badgeItemsTextViewForRequests.setText(totalUnseenRequests);
+            badgeItemsTextViewForRequests.setVisibility(visibility);
+        }
+    }
+
+
+    private void createBadgeViewForRequestsTab(){
+        LayoutInflater layoutInflater = getLayoutInflater();
+        badgeViewForRequests = layoutInflater.inflate(R.layout.badge_view, null);
+        badgeItemsTextViewForRequests = badgeViewForRequests.findViewById(R.id.badge_items_text_view);
+        badgeHeadingTextViewForRequests = badgeViewForRequests.findViewById(R.id.badge_heading_text_view);
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

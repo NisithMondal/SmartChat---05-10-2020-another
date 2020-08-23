@@ -12,7 +12,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
 import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.google.firebase.auth.FirebaseAuth;
@@ -20,11 +19,9 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.nisith.smartchat.Adapters.MyChatsFragmentRecyclerAdapter;
-import com.nisith.smartchat.Adapters.MyFriendFragmentRecyclerAdapter;
 import com.nisith.smartchat.ChatActivity;
 import com.nisith.smartchat.Constant;
 import com.nisith.smartchat.DialogBox.FriendImageClickDialog;
-import com.nisith.smartchat.FriendsProfileActivity;
 import com.nisith.smartchat.HomeActivity;
 import com.nisith.smartchat.Model.Friend;
 import com.nisith.smartchat.R;
@@ -60,8 +57,8 @@ public class ChatFragment extends Fragment implements MyChatsFragmentRecyclerAda
 
     }
 
-    private void setUpRecyclerViewWithAdapter(){
-        Query query =friendsDatabaseRef.orderByKey();
+    private void setUpRecyclerViewWithAdapter() {
+        Query query = friendsDatabaseRef.orderByKey();
         FirebaseRecyclerOptions<Friend> recyclerOptions = new FirebaseRecyclerOptions.Builder<Friend>()
                 .setQuery(query, Friend.class)
                 .build();
@@ -72,9 +69,13 @@ public class ChatFragment extends Fragment implements MyChatsFragmentRecyclerAda
     }
 
 
-    public void setTotalUnreadMessages(String totalUnreadMessages){
+    public void setRecyclerViewPositionToScroll(int position){
+        recyclerView.smoothScrollToPosition(position);
+    }
+
+    public void setTotalUnreadChats(String totalUnreadChats, int visibility){
         if (homeActivity != null){
-            homeActivity.setTabLayoutUnreadMessageCount(totalUnreadMessages);
+            homeActivity.setTotalUnreadChatsInTabLayout(totalUnreadChats, visibility);
         }
     }
 

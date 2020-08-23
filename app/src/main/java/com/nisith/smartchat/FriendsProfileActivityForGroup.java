@@ -288,26 +288,6 @@ public class FriendsProfileActivityForGroup extends AppCompatActivity {
                             declineRequestButton.setEnabled(false);
 
                         }
-//                        else if (requestStatus.equals(Constant.RECEIVE_REQUEST)){
-//                            //This friend send request to the Current User.
-//                            friendRequestButton.setText("Accept Request");
-//                            friendRequestButton.setBackground(getDrawable(R.drawable.button_background_shape1));
-//                            declineRequestButton.setText("Decline Request");
-//                            declineRequestButton.setEnabled(true);
-//                            displayMessageTextView.setVisibility(View.VISIBLE);
-//                            displayMessageTextView.setText(friendName + " wants to add you in this group");
-//                            declineRequestButton.setVisibility(View.VISIBLE);
-//
-//                        }else if (requestStatus.equals(Constant.FRIEND)){
-//                            //Both of you are friends now.
-//                            displayMessageTextView.setText("Both of you are friends now");
-//                            displayMessageTextView.setVisibility(View.VISIBLE);
-//                            declineRequestButton.setText("UnFriend");
-//                            declineRequestButton.setVisibility(View.VISIBLE);
-//                            declineRequestButton.setEnabled(true);
-//                            friendRequestButton.setVisibility(View.INVISIBLE);
-//                            friendRequestButton.setEnabled(false);
-//                        }
                     }
 
                     @Override
@@ -326,8 +306,9 @@ public class FriendsProfileActivityForGroup extends AppCompatActivity {
             Map<String, Object> dataMap = new HashMap<>();
             //send request for group friendship
             //I concatinate group key to generate unike request key for group's friend request
-            dataMap.put(requestSenderUid + "/" + requestReceiverUid + groupKey, new FriendRequest(Constant.SEND_REQUEST, true, groupKey, requestReceiverUid, System.currentTimeMillis()));
-            dataMap.put(requestReceiverUid + "/" + requestSenderUid + groupKey, new FriendRequest(Constant.RECEIVE_REQUEST,  true, groupKey, requestSenderUid, System.currentTimeMillis()));
+            //here 'read' is false means current user send the notification to his friends which is not yet seen by his/her friend
+            dataMap.put(requestSenderUid + "/" + requestReceiverUid + groupKey, new FriendRequest(Constant.SEND_REQUEST, true, groupKey, requestReceiverUid, System.currentTimeMillis(), false));
+            dataMap.put(requestReceiverUid + "/" + requestSenderUid + groupKey, new FriendRequest(Constant.RECEIVE_REQUEST,  true, groupKey, requestSenderUid, System.currentTimeMillis(), false));
             requestStatus = Constant.SEND_REQUEST;
             friendRequestDatabaseRef.updateChildren(dataMap);
 
@@ -336,68 +317,7 @@ public class FriendsProfileActivityForGroup extends AppCompatActivity {
             //Current user wants to Cancel friend request
             cancelFriendRequest();
         }
-//        else if (requestStatus.equals(Constant.RECEIVE_REQUEST)){
-//            //Current user wants to accept friend request
-//            acceptFriendRequest();
-//
-//        }
     }
-
-
-//
-//    private void acceptFriendRequest(){
-//        Map<String, Object> map = new HashMap<>();
-//        map.put(requestSenderUid+"/"+requestReceiverUid + groupKey, new FriendRequest(Constant.FRIEND,true, groupKey,requestReceiverUid,"now"));
-//        map.put(requestReceiverUid+"/"+requestSenderUid + groupKey, new FriendRequest(Constant.FRIEND, true, groupKey,requestSenderUid,"now"));
-//        friendRequestDatabaseRef.updateChildren(map, new DatabaseReference.CompletionListener() {
-//            @Override
-//            public void onComplete(@Nullable DatabaseError error, @NonNull DatabaseReference ref) {
-//                if (error == null){
-//                    //means all ok
-//                    Friend friend = new Friend("now", Constant.GROUP_FRIEND);
-//                    Map<String, Object> addFriendMap = new HashMap<>();
-//                    addFriendMap.put("friends"+"/"+currentUserId+"/"+groupKey,friend);  //group is added current user friend's node
-//                    addFriendMap.put("group_friends"+"/"+groupKey+"/"+currentUserId,friend);// the current user is added to the group friend's node
-//                    rootDatabaseRef.updateChildren(addFriendMap);
-//
-//                }
-//            }
-//        });
-//    }
-//
-//    private void declineFriendRequest(){
-//        if (declineRequestButton.getVisibility() == View.VISIBLE){
-//            if (declineRequestButton.getText().toString().equalsIgnoreCase("Decline Request")) {
-//                //Decline Request
-//                cancelFriendRequest();
-//            }else if (declineRequestButton.getText().toString().equalsIgnoreCase("UnFriend")){
-//                //UnFriend
-//                unFriend();
-//            }
-//        }
-//    }
-//
-//    private void unFriend(){
-//        Map<String, Object> unFriendMap = new HashMap<>();
-//        unFriendMap.put(requestSenderUid+"/"+requestReceiverUid + groupKey, null);
-//        unFriendMap.put(requestReceiverUid+"/"+requestSenderUid + groupKey, null);
-//        friendRequestDatabaseRef.updateChildren(unFriendMap, new DatabaseReference.CompletionListener() {
-//            @Override
-//            public void onComplete(@Nullable DatabaseError error, @NonNull DatabaseReference ref) {
-//                if (error == null){
-//                    //means all ok
-//                    Map<String, Object> addFriendMap = new HashMap<>();
-//                    addFriendMap.put("friends"+"/"+currentUserId+"/"+groupKey, null);  //group is deleted from current user friend's node
-//                    addFriendMap.put("group_friends"+"/"+groupKey+"/"+currentUserId, null);// the current user is deleted from the group friend's node
-//                    rootDatabaseRef.updateChildren(addFriendMap);
-//
-//                }
-//            }
-//        });
-//
-//    }
-
-
 
     private void cancelFriendRequest(){
         //cancel group friend request

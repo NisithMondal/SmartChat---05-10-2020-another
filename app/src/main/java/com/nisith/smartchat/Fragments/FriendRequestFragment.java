@@ -89,6 +89,7 @@ public class FriendRequestFragment extends Fragment implements MyFriendRequestFr
         }
     }
 
+
     @Override
     public void onStop() {
         super.onStop();
@@ -96,7 +97,6 @@ public class FriendRequestFragment extends Fragment implements MyFriendRequestFr
             currentUserFriendRequestDatabaseRef.removeEventListener(childEventListener);
         }
     }
-
 
 
     private void getCurrentUsersFriendRequestsData(){
@@ -225,8 +225,9 @@ public class FriendRequestFragment extends Fragment implements MyFriendRequestFr
         Map<String, Object> map = new HashMap<>();
         if (! isRequestForGroup) {
             //If friend request is not for a group, then this code will execute
-            map.put(requestSenderUid + "/" + requestReceiverUid, new FriendRequest(Constant.FRIEND, false, "", requestReceiverUid, System.currentTimeMillis()));
-            map.put(requestReceiverUid + "/" + requestSenderUid, new FriendRequest(Constant.FRIEND, false, "", requestReceiverUid, System.currentTimeMillis()));
+            //here 'read' is true means user seen the notification
+            map.put(requestSenderUid + "/" + requestReceiverUid, new FriendRequest(Constant.FRIEND, false, "", requestReceiverUid, System.currentTimeMillis(), true));
+            map.put(requestReceiverUid + "/" + requestSenderUid, new FriendRequest(Constant.FRIEND, false, "", requestReceiverUid, System.currentTimeMillis(), true));
             friendRequestRootDatabaseRef.updateChildren(map, new DatabaseReference.CompletionListener() {
                 @Override
                 public void onComplete(@Nullable DatabaseError error, @NonNull DatabaseReference ref) {
@@ -242,8 +243,9 @@ public class FriendRequestFragment extends Fragment implements MyFriendRequestFr
             });
         }else {
             //Request is for group friend request
-            map.put(requestSenderUid+"/"+requestReceiverUid + groupKey, new FriendRequest(Constant.FRIEND,true, groupKey,requestReceiverUid, System.currentTimeMillis()));
-            map.put(requestReceiverUid+"/"+requestSenderUid + groupKey, new FriendRequest(Constant.FRIEND, true, groupKey,requestSenderUid, System.currentTimeMillis()));
+            //here 'read' is true, means user seen the notification
+            map.put(requestSenderUid+"/"+requestReceiverUid + groupKey, new FriendRequest(Constant.FRIEND,true, groupKey,requestReceiverUid, System.currentTimeMillis(), true));
+            map.put(requestReceiverUid+"/"+requestSenderUid + groupKey, new FriendRequest(Constant.FRIEND, true, groupKey,requestSenderUid, System.currentTimeMillis(), true));
             friendRequestRootDatabaseRef.updateChildren(map, new DatabaseReference.CompletionListener() {
                 @Override
                 public void onComplete(@Nullable DatabaseError error, @NonNull DatabaseReference ref) {
