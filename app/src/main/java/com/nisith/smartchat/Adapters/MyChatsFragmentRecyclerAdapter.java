@@ -1,5 +1,6 @@
 package com.nisith.smartchat.Adapters;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,11 +22,14 @@ import com.nisith.smartchat.Model.GroupProfile;
 import com.nisith.smartchat.Model.Message;
 import com.nisith.smartchat.Model.UnreadChatsModel;
 import com.nisith.smartchat.Model.UserProfile;
+import com.nisith.smartchat.Model.UserStatus;
 import com.nisith.smartchat.Model.ValueEventListenerModel;
 import com.nisith.smartchat.R;
 import com.squareup.picasso.Picasso;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
 import androidx.annotation.NonNull;
@@ -40,9 +44,10 @@ public class MyChatsFragmentRecyclerAdapter extends FirebaseRecyclerAdapter<Frie
 
     private ChatFragment chatFragment;
     private String currentUserUid;
-    private DatabaseReference userDatabaseRef, groupDatabaseRef, messagesDatabaseRef;
+    private DatabaseReference userDatabaseRef, groupDatabaseRef, messagesRootDatabaseRef, userDetailInfoDatabaseRef;
     private OnChatsFragmentViewsClickListener chatsCardViewsClickListener;
     private List<UnreadChatsModel> unreadChatsModelList;
+    private List<ValueEventListenerModel> removeListenerFromFriendOnlineStatusList, removeListenerFromLastChatMessagesList;
     private List<ValueEventListenerModel> removeListenerFromSingleFriendList; //value event listener for friends key
     private List<ValueEventListenerModel> removeListenerFromGroupFriendList, removeValueEventListenerFromUnreadMessagesForFriends; //value event listener for groups key
 
@@ -52,10 +57,13 @@ public class MyChatsFragmentRecyclerAdapter extends FirebaseRecyclerAdapter<Frie
         this.chatsCardViewsClickListener = chatFragment;
         this.chatFragment = chatFragment;
         userDatabaseRef = FirebaseDatabase.getInstance().getReference().child("users");
+        userDetailInfoDatabaseRef = FirebaseDatabase.getInstance().getReference().child("users_detail_info");
         groupDatabaseRef = FirebaseDatabase.getInstance().getReference().child("groups");
-        messagesDatabaseRef = FirebaseDatabase.getInstance().getReference().child("messages");
+        messagesRootDatabaseRef = FirebaseDatabase.getInstance().getReference().child("messages");
         currentUserUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
         unreadChatsModelList = new ArrayList<>();
+        this.removeListenerFromFriendOnlineStatusList = new ArrayList<>();
+        this.removeListenerFromLastChatMessagesList = new ArrayList<>();
         this.removeListenerFromSingleFriendList = new ArrayList<>();
         this.removeListenerFromGroupFriendList = new ArrayList<>();
         this.removeValueEventListenerFromUnreadMessagesForFriends = new ArrayList<>();
@@ -74,8 +82,11 @@ public class MyChatsFragmentRecyclerAdapter extends FirebaseRecyclerAdapter<Frie
         if (friend.getFriendsType().equals(Constant.SINGLE_FRIEND)) {
             // this means value event listener is add on one to one friend chat
             final String userKey = getRef(position).getKey();
+            getLastMessageOfPrivateOrGroupChat(userKey, holder);
             holder.totalUnreadMessageTextView.setVisibility(View.GONE);
-            getTotalUnreadMessages(userKey, holder, Constant.SINGLE_FRIEND);
+            getTotalUnreadMessagesCount(userKey, holder, Constant.SINGLE_FRIEND);
+            //Friends online state is only shows for SINGLE_FRIEND not for GROUP_FRIEND...
+            getFriendsOnlineStates(userKey, holder);
             ValueEventListener valueEventListener = userDatabaseRef.child(userKey)
                     .addValueEventListener(new ValueEventListener() {
                         @Override
@@ -85,7 +96,6 @@ public class MyChatsFragmentRecyclerAdapter extends FirebaseRecyclerAdapter<Frie
                                 if (userProfile != null) {
                                     String userName = userProfile.getUserName();
                                     holder.profileNameTextView.setText(userName);
-                                    holder.lastMessageTextView.setText("Hello there");
                                     String imageUrl = userProfile.getProfileImage();
                                     if (!imageUrl.equalsIgnoreCase("default")) {
                                         Picasso.get().load(imageUrl).placeholder(R.drawable.user_icon).into(holder.profileImageView);
@@ -106,8 +116,9 @@ public class MyChatsFragmentRecyclerAdapter extends FirebaseRecyclerAdapter<Frie
         }else {
             //this means value event listener is add on group chats key
             final String groupKey = getRef(position).getKey();
+            getLastMessageOfPrivateOrGroupChat(groupKey, holder);
             holder.totalUnreadMessageTextView.setVisibility(View.GONE);
-            getTotalUnreadMessages(groupKey, holder, Constant.GROUP_FRIEND);
+            getTotalUnreadMessagesCount(groupKey, holder, Constant.GROUP_FRIEND);
             ValueEventListener groupValueEventListener = groupDatabaseRef.child(groupKey)
                  .addValueEventListener(new ValueEventListener() {
                      @Override
@@ -117,7 +128,8 @@ public class MyChatsFragmentRecyclerAdapter extends FirebaseRecyclerAdapter<Frie
                              if (groupProfile != null) {
                                  String groupName = groupProfile.getGroupName();
                                  holder.profileNameTextView.setText(groupName);
-                                 holder.lastMessageTextView.setText("Last Message");
+                                 // We not showing online status in group chat row
+                                 holder.onlineStatusImageView.setVisibility(View.GONE);
                                  String imageUrl = groupProfile.getGroupProfileImage();
                                  if (!imageUrl.equalsIgnoreCase("default")) {
                                      Picasso.get().load(imageUrl).placeholder(R.drawable.group_icon).into(holder.profileImageView);
@@ -149,11 +161,11 @@ public class MyChatsFragmentRecyclerAdapter extends FirebaseRecyclerAdapter<Frie
     }
 
 
-    private void getTotalUnreadMessages(final String key, final MyViewHolder holder, final String friendType){
+    private void getTotalUnreadMessagesCount(final String key, final MyViewHolder holder, final String friendType){
     //Key may be friend_key or group_key
     //This method will give us all unread messages number of every single friend. This method will not give unread messages for group...
      final String messageSenderUid = currentUserUid;
-     ValueEventListener  valueEventListener = messagesDatabaseRef.child(messageSenderUid).child(key).orderByChild("read").equalTo(false)
+     ValueEventListener  valueEventListener = messagesRootDatabaseRef.child(messageSenderUid).child(key).orderByChild("read").equalTo(false)
                 .addValueEventListener(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -194,6 +206,89 @@ public class MyChatsFragmentRecyclerAdapter extends FirebaseRecyclerAdapter<Frie
      removeValueEventListenerFromUnreadMessagesForFriends.add(new ValueEventListenerModel(key, valueEventListener));
     }
 
+
+
+    private void getFriendsOnlineStates(String friendKey, final MyViewHolder holder){
+        //Friends online state is only shows for SINGLE_FRIEND not for GROUP_FRIEND...
+        //Perform operation if friends are online or not. This info is fetch from 'user_details_info' database node.
+        //I store user status in this database
+        ValueEventListener statusValueEventListener = userDetailInfoDatabaseRef.child(friendKey).child("userStatus")
+                .addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        if (snapshot.exists()){
+                            UserStatus userStatus = snapshot.getValue(UserStatus.class);
+                            if (userStatus != null){
+                                boolean isOnline = userStatus.isOnline();
+                                if (isOnline){
+                                    holder.onlineStatusImageView.setVisibility(View.VISIBLE);
+                                }else {
+                                    holder.onlineStatusImageView.setVisibility(View.GONE);
+                                }
+                            }else {
+                                //If data not available for any reason make online status invisible
+                                holder.onlineStatusImageView.setVisibility(View.GONE);
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+
+                    }
+                });
+        removeListenerFromFriendOnlineStatusList.add(new ValueEventListenerModel(friendKey, statusValueEventListener));
+    }
+
+
+
+    private void getLastMessageOfPrivateOrGroupChat(String key, final MyViewHolder holder){
+
+        //Here 'key' may be friend_key or group_key...
+        //This method fetch the last message of any group or friends of the current users
+      ValueEventListener valueEventListener = messagesRootDatabaseRef.child(currentUserUid).child(key).orderByKey().limitToLast(1)
+                .addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        if (snapshot.exists()){
+                            for (DataSnapshot snapshot1 : snapshot.getChildren()){
+                                Message message = snapshot1.getValue(Message.class);
+                                if (message != null){
+                                    holder.lastMessageTextView.setText(message.getMessage());
+                                    String currentDate = getCurrentDate();
+                                    if (currentDate.equals(message.getDate())){
+                                        /* Last message date is today. So we only show the time of last message. If last message date is not today,
+                                           we simply show message date */
+                                        holder.lastMessageDateTextView.setText(message.getTime());
+                                    }else {
+                                        //Last message date is not today. So simply set date of the last message
+                                        holder.lastMessageDateTextView.setText(message.getDate());
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+
+                    }
+                });
+
+      removeListenerFromLastChatMessagesList.add(new ValueEventListenerModel(key, valueEventListener));
+
+    }
+
+
+    private String getCurrentDate(){
+        Calendar calendar = Calendar.getInstance();
+        SimpleDateFormat date = new SimpleDateFormat("MMM dd, yyyy");
+        return date.format(calendar.getTime());
+    }
+
+
+
+
     public void removeValueEventListener(){
         //remove all value event listener from friends
         for (ValueEventListenerModel model : removeListenerFromSingleFriendList){
@@ -207,25 +302,41 @@ public class MyChatsFragmentRecyclerAdapter extends FirebaseRecyclerAdapter<Frie
         removeListenerFromGroupFriendList.clear();
 
         for (ValueEventListenerModel model : removeValueEventListenerFromUnreadMessagesForFriends) {
-            messagesDatabaseRef.child(currentUserUid).child(model.getKey()).removeEventListener(model.getValueEventListener());
+            messagesRootDatabaseRef.child(currentUserUid).child(model.getKey()).removeEventListener(model.getValueEventListener());
         }
         removeValueEventListenerFromUnreadMessagesForFriends.clear();
+
+        for (ValueEventListenerModel model : removeListenerFromFriendOnlineStatusList){
+            userDetailInfoDatabaseRef.child(model.getKey()).child("userStatus").removeEventListener(model.getValueEventListener());
+        }
+        removeListenerFromFriendOnlineStatusList.clear();
+
+        int i = 1;
+        for (ValueEventListenerModel model : removeListenerFromLastChatMessagesList){
+            messagesRootDatabaseRef.child(currentUserUid).child(model.getKey()).removeEventListener(model.getValueEventListener());
+            Log.d("MNBVCX","i = "+i);
+            i++;
+        }
+        removeListenerFromLastChatMessagesList.clear();
+
         unreadChatsModelList.clear();
+
     }
+
 
 
     class MyViewHolder extends RecyclerView.ViewHolder{
         CircleImageView profileImageView;
-        TextView profileNameTextView, lastMessageTextView, lastSeenTextView, totalUnreadMessageTextView;
-        ImageView onlineStateImageView;
+        TextView profileNameTextView, lastMessageTextView, lastMessageDateTextView, totalUnreadMessageTextView;
+        ImageView onlineStatusImageView;
         public MyViewHolder(@NonNull View itemView) {
             super(itemView);
             profileImageView = itemView.findViewById(R.id.profile_image_view);
             profileNameTextView = itemView.findViewById(R.id.user_name_text_view);
             lastMessageTextView = itemView.findViewById(R.id.last_message_text_view);
-            lastSeenTextView = itemView.findViewById(R.id.last_seen_text_view);
+            lastMessageDateTextView = itemView.findViewById(R.id.last_message_date_text_view);
             totalUnreadMessageTextView = itemView.findViewById(R.id.total_unread_message_text_view);
-            onlineStateImageView = itemView.findViewById(R.id.online_state_image_view);
+            onlineStatusImageView = itemView.findViewById(R.id.online_state_image_view);
 
             //Click Listeners
             profileImageView.setOnClickListener(new View.OnClickListener() {
