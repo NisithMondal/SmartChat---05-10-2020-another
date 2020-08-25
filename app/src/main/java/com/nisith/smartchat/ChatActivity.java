@@ -13,6 +13,7 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
+import android.widget.AbsListView;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -25,8 +26,10 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.nisith.smartchat.Adapters.MyChatActivityRecyclerViewAdapter;
+import com.nisith.smartchat.Model.ChildEventListenerModel;
 import com.nisith.smartchat.Model.Friend;
 import com.nisith.smartchat.Model.GroupProfile;
 import com.nisith.smartchat.Model.Message;
@@ -45,7 +48,7 @@ public class ChatActivity extends AppCompatActivity {
 
     private Toolbar appToolbar;
     private ImageView backArrowImageView;
-    private RecyclerView chatRecyclerView;
+    private RecyclerView recyclerView;
     private CircleImageView profileImageView;
     private ImageView sendMessageImageView;
     private EditText writeMessageEditText;
@@ -63,6 +66,15 @@ public class ChatActivity extends AppCompatActivity {
     private List<Message> messageList;
     private List<String> totalGroupFriendsList; // Contains all the friend's uid of a particular group...
     private MyChatActivityRecyclerViewAdapter recyclerViewAdapter;
+    //For pagination
+    private final int initialPageSize = 20; //Total number of messages to be fetched for first time.
+    private final int pageSize = 15; //Total number of messages to be fetched for next time.
+    private String messageListFirstMessageKey; //This will contains the message key from where message will be fetched for next times...
+    private int count = 0, index;
+    private List<ChildEventListenerModel> removeListenerFromChatMessagesPaginationList;
+    private boolean isScrolling = false;//Recycler view is scrolling or not...
+    private boolean isUserStartPagination = false;
+    private LinearLayoutManager linearLayoutManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -89,6 +101,7 @@ public class ChatActivity extends AppCompatActivity {
         fetchDataFromIntent();
         messageList = new ArrayList<>();
         totalGroupFriendsList = new ArrayList<>();
+        removeListenerFromChatMessagesPaginationList = new ArrayList<>();
         setupRecyclerViewWithAdapter();
         sendMessageImageView.setOnClickListener(new MyClickListener());
         messageDateTextView.setVisibility(View.GONE);
@@ -100,7 +113,7 @@ public class ChatActivity extends AppCompatActivity {
       profileNameTextView = findViewById(R.id.profile_name_text_view);
       onlineStatusTextView = findViewById(R.id.friend_status_text_view);
       profileImageView = findViewById(R.id.profile_image_view);
-      chatRecyclerView = findViewById(R.id.chat_recycler_view);
+      recyclerView = findViewById(R.id.chat_recycler_view);
       writeMessageEditText = findViewById(R.id.message_edit_text);
       sendMessageImageView = findViewById(R.id.send_message_image_view);
       messageDateTextView = findViewById(R.id.message_date_text_view);
@@ -115,9 +128,33 @@ public class ChatActivity extends AppCompatActivity {
 
     private void setupRecyclerViewWithAdapter(){
         recyclerViewAdapter = new MyChatActivityRecyclerViewAdapter(messageList, this);
-        chatRecyclerView.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
-        chatRecyclerView.setHasFixedSize(true);
-        chatRecyclerView.setAdapter(recyclerViewAdapter);
+        linearLayoutManager = new LinearLayoutManager(this);
+        recyclerView.setLayoutManager(linearLayoutManager);
+        recyclerView.setHasFixedSize(true);
+        recyclerView.setAdapter(recyclerViewAdapter);
+        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
+                super.onScrollStateChanged(recyclerView, newState);
+                if (newState == AbsListView.OnScrollListener.SCROLL_STATE_TOUCH_SCROLL){
+                     isScrolling = true;
+                }
+            }
+
+            @Override
+            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+               int itemPosition = linearLayoutManager.findFirstCompletelyVisibleItemPosition();
+               //when first item position is '2' in recycler view
+                if (isScrolling && itemPosition == 2 && dy < 0){
+                    //'dy' will be negative for downWord scrolling i.e. from bottom to top scrolling
+                    isUserStartPagination = true;//User scroll to see old messages
+                    //Fetch more message from server
+                    fetchChatMessages(key);
+                    isScrolling = false;
+                }
+            }
+        });
 
     }
 
@@ -277,15 +314,97 @@ public class ChatActivity extends AppCompatActivity {
             String groupKey = key; //here key means groupKey
             groupFriendsDatabaseRef.child(groupKey).removeEventListener(totalGroupFriendsChildEventListener);
         }
+
+        int index = 1;
+        for (ChildEventListenerModel model : removeListenerFromChatMessagesPaginationList){
+            messagesDatabaseRef.child(currentUser.getUid()).child(model.getKey()).removeEventListener(model.getChildEventListener());
+            Log.d("MNBVCX","Remove child event listener index = "+index);
+            index++;
+        }
+        removeListenerFromChatMessagesPaginationList.clear();
+
         ///////////////////////////////////////////////////////
 
-            messagesDatabaseRef.child(currentUser.getUid()).child(key).removeEventListener(testValueEventListener);
+//            messagesDatabaseRef.child(currentUser.getUid()).child(key).removeEventListener(testValueEventListener);
     }
 
 
 
 
+    private void fetchChatMessages(String key){
+        //key may be friend_key or group_key
+        //This method will fetch few number ovf messages from server each time.
+        count = 0;
+        index = 0;
+        Query query;
+        Log.d("MNBVCX", "function called");
+        if (messageList.size() == 0) {
+            //Fetch message for first time
+            query = messagesDatabaseRef.child(currentUser.getUid()).child(key).orderByChild("date").limitToLast(initialPageSize);
+            Log.d("MNBVCX", "if is called");
+        }else {
+            //Fetch message for next time. When user scroll to see old messages.
+            Log.d("MNBVCX", "else part last message key = "+ messageListFirstMessageKey);
+            query = messagesDatabaseRef.child(currentUser.getUid()).child(key).orderByKey().endAt(messageListFirstMessageKey).limitToLast(pageSize);
+        }
+
+          ChildEventListener childEventListener = query.addChildEventListener(new ChildEventListener() {
+                    @Override
+                    public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+                        Log.d("MNBVCX", "key = "+snapshot.getKey());
+                        if (snapshot.exists()){
+                            Message message = snapshot.getValue(Message.class);
+                            if (message != null){
+                                message.setMessageKey(snapshot.getKey());
+                                if (! messageList.contains(message)){
+                                    messageList.add(index, message);
+                                    index++;
+                                    if (count == 0){
+                                        messageListFirstMessageKey = message.getMessageKey();
+                                        count++;
+                                    }
+                                    recyclerViewAdapter.notifyDataSetChanged();
+                                    Log.d("MNBVCX", "list size = "+messageList.size());
+                                    if(! isUserStartPagination) {
+                                        recyclerView.smoothScrollToPosition(recyclerViewAdapter.getItemCount());
+                                    }else {
+                                        recyclerView.smoothScrollToPosition(pageSize + 4);
+                                    }
+                                }
+                            }
+                        }else {
+                            Log.d("MNBVCX", "snapshot not exist");
+                        }
+
+                    }
+
+                    @Override
+                    public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+
+                    }
+
+                    @Override
+                    public void onChildRemoved(@NonNull DataSnapshot snapshot) {
+
+                    }
+
+                    @Override
+                    public void onChildMoved(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+
+                    }
+                });
+        removeListenerFromChatMessagesPaginationList.add(new ChildEventListenerModel(key, childEventListener));
+
+    }
+
+
     private void showChatMessages(){
+/*
         messageList.clear();
        testValueEventListener = messagesDatabaseRef.child(currentUser.getUid()).child(key)
                 .addChildEventListener(new ChildEventListener() {
@@ -338,7 +457,10 @@ public class ChatActivity extends AppCompatActivity {
 
                     }
                 });
+
+ */
     }
+
 
 
 
@@ -482,7 +604,8 @@ public class ChatActivity extends AppCompatActivity {
                                 }
                                 ////////////////
                                 recyclerViewAdapter.setProfileImageUrl(profileImageUrl);
-                                showChatMessages();
+//                                showChatMessages();
+                                fetchChatMessages(key);
                             }
                         }
                     }
@@ -542,7 +665,7 @@ public class ChatActivity extends AppCompatActivity {
                                     Picasso.get().load(R.drawable.ic_group_icon_white).placeholder(R.drawable.ic_group_icon_white).into(profileImageView);
                                 }
                                 /////////////////////
-                                showChatMessages();
+                                fetchChatMessages(key);
 
                             }
                         }
