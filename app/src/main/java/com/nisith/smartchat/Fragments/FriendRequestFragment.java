@@ -207,7 +207,7 @@ public class FriendRequestFragment extends Fragment implements MyFriendRequestFr
                 //But this is not necessary.
                 if (buttonCaption.equalsIgnoreCase("Decline")){
                     cancelFriendRequest(friendUid, groupKey, isRequestForGroup);
-                }else if (buttonCaption.equalsIgnoreCase("Cancel Request")){
+                }else if (buttonCaption.equalsIgnoreCase("Cancel Req.")){
                     cancelFriendRequest(friendUid, groupKey, isRequestForGroup);
                 }
         }

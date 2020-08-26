@@ -9,6 +9,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,7 +26,7 @@ import com.nisith.smartchat.DialogBox.FriendImageClickDialog;
 import com.nisith.smartchat.HomeActivity;
 import com.nisith.smartchat.Model.Friend;
 import com.nisith.smartchat.R;
-public class ChatFragment extends Fragment implements MyChatsFragmentRecyclerAdapter.OnChatsFragmentViewsClickListener {
+public class ChatFragment extends Fragment implements MyChatsFragmentRecyclerAdapter.OnChatsFragmentViewsClickListener, HomeActivity.OnSearchTextChangeListener {
 
     private RecyclerView recyclerView;
     private MyChatsFragmentRecyclerAdapter adapter;
@@ -119,5 +120,9 @@ public class ChatFragment extends Fragment implements MyChatsFragmentRecyclerAda
     }
 
 
-
+    @Override
+    public void onSearchTextChange(String newText, int selectedTabIndex) {
+        Log.d("MNBVCX","Chat Fragment input = "+ newText);
+        Log.d("MNBVCX","Tab index = "+ selectedTabIndex);
+    }
 }

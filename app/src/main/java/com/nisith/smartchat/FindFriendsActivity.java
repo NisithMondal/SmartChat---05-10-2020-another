@@ -1,27 +1,22 @@
 package com.nisith.smartchat;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SearchView;
 import androidx.appcompat.widget.Toolbar;
 import androidx.paging.PagedList;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import android.app.DownloadManager;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.View;
-import android.widget.Adapter;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.firebase.ui.database.paging.DatabasePagingOptions;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
@@ -39,7 +34,7 @@ public class FindFriendsActivity extends AppCompatActivity implements MyFindFrie
     private MyFindFriendsPaginationAdapter findFriendsPaginationAdapter;
     private String searchFriendsType;
     //Firebase
-    private DatabaseReference rootDatabaseRef;
+    private DatabaseReference rootUsersDatabaseRef;
     private ValueEventListener valueEventListener;
     private String groupKey; //this is required to open FriendsProfileActivityForGroup
 
@@ -65,9 +60,9 @@ public class FindFriendsActivity extends AppCompatActivity implements MyFindFrie
         // group key will not be null.
         groupKey = intent.getStringExtra(Constant.GROUP_KEY);
         //Firebase
-        rootDatabaseRef = FirebaseDatabase.getInstance().getReference().child("users");
+        rootUsersDatabaseRef = FirebaseDatabase.getInstance().getReference().child("users");
         //To get Updated data from server
-        rootDatabaseRef.keepSynced(true);
+        rootUsersDatabaseRef.keepSynced(true);
         findFriendsFromDatabase();
 
     }
@@ -86,6 +81,19 @@ public class FindFriendsActivity extends AppCompatActivity implements MyFindFrie
         super.onCreateOptionsMenu(menu);
         MenuInflater menuInflater = getMenuInflater();
         menuInflater.inflate(R.menu.find_friends_menu,menu);
+        SearchView searchView = (SearchView) menu.findItem(R.id.search_friend).getActionView();
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                Log.d("ZXCVB",newText);
+                return true;
+            }
+        });
         return true;
     }
 
@@ -107,24 +115,24 @@ public class FindFriendsActivity extends AppCompatActivity implements MyFindFrie
             findFriendsPaginationAdapter.stopListening();
 
         }
-        if(rootDatabaseRef != null){
-            rootDatabaseRef.keepSynced(false);
+        if(rootUsersDatabaseRef != null){
+            rootUsersDatabaseRef.keepSynced(false);
         }
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if(rootDatabaseRef != null){
+        if(rootUsersDatabaseRef != null){
             //if any reason onStop() is not called
-            rootDatabaseRef.keepSynced(false);
+            rootUsersDatabaseRef.keepSynced(false);
         }
     }
 
 
 
     private void findFriendsFromDatabase(){
-        Query query = rootDatabaseRef;
+        Query query = rootUsersDatabaseRef;
         PagedList.Config config = new PagedList.Config.Builder()
                 .setEnablePlaceholders(false)
                 .setPrefetchDistance(10)
@@ -134,7 +142,6 @@ public class FindFriendsActivity extends AppCompatActivity implements MyFindFrie
                 .setQuery(query,config,UserProfile.class)
                 .build();
         findFriendsPaginationAdapter = new MyFindFriendsPaginationAdapter(pagingOptions,this);
-
         recyclerView.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
         recyclerView.setHasFixedSize(true);
         recyclerView.setAdapter(findFriendsPaginationAdapter);

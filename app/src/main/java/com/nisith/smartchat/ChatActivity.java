@@ -150,7 +150,7 @@ public class ChatActivity extends AppCompatActivity {
                     //'dy' will be negative for downWord scrolling i.e. from bottom to top scrolling
                     isUserStartPagination = true;//User scroll to see old messages
                     //Fetch more message from server
-                    fetchChatMessages(key);
+                    fetchChatMessagesForPagination(key);
                     isScrolling = false;
                 }
             }
@@ -269,10 +269,6 @@ public class ChatActivity extends AppCompatActivity {
             totalGroupFriendsList.clear();
         }
         setDataOnViews();
-        ////////////////////
-        if (messageReceiverId != null){
-            showChatMessages();
-        }
 
     }
 
@@ -323,64 +319,132 @@ public class ChatActivity extends AppCompatActivity {
         }
         removeListenerFromChatMessagesPaginationList.clear();
 
-        ///////////////////////////////////////////////////////
-
-//            messagesDatabaseRef.child(currentUser.getUid()).child(key).removeEventListener(testValueEventListener);
     }
 
 
 
+    private void fetchChatMessagesForFirstTime(final String key){
 
-    private void fetchChatMessages(String key){
         //key may be friend_key or group_key
-        //This method will fetch few number ovf messages from server each time.
+        //This method will fetch initialPageSize number of messages from server for the first time.
+        count = 0;
+        //Query to fetch message for first time
+        Query query = messagesDatabaseRef.child(currentUser.getUid()).child(key).orderByChild("date").limitToLast(initialPageSize);
+
+        ChildEventListener childEventListener = query.addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+                if (snapshot.exists()) {
+                    Message message = snapshot.getValue(Message.class);
+                    if (message != null) {
+                        message.setMessageKey(snapshot.getKey());
+                        if (!messageList.contains(message)) {
+                            messageList.add(message);
+                            if (count == 0) {
+                                messageListFirstMessageKey = message.getMessageKey();
+                                count++;
+                            }
+                            if (friendType.equals(Constant.SINGLE_FRIEND)) {
+                                setMessageReadStatusForOneToOneChat(message);
+                            } else if (friendType.equals(Constant.GROUP_FRIEND)) {
+                                setMessageReadStatusForGroupChat(message, key);
+                            }
+                            recyclerViewAdapter.notifyDataSetChanged();
+                            recyclerView.smoothScrollToPosition(recyclerViewAdapter.getItemCount());
+                        }
+
+                    }
+                }
+
+            }
+
+            @Override
+            public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+                if (snapshot.exists()){
+                    Message message = snapshot.getValue(Message.class);
+                    if (message != null) {
+                        message.setMessageKey(snapshot.getKey());
+                        if (message.isRead() && messageList.contains(message)) {
+                            int elementPosition = messageList.indexOf(message);
+                            messageList.set(elementPosition, message);
+                            recyclerViewAdapter.notifyItemChanged(elementPosition);
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void onChildRemoved(@NonNull DataSnapshot snapshot) {
+
+            }
+
+            @Override
+            public void onChildMoved(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+        removeListenerFromChatMessagesPaginationList.add(new ChildEventListenerModel(key, childEventListener));
+
+    }
+
+
+
+    private void fetchChatMessagesForPagination(final String key){
+        //key may be friend_key or group_key
+        //This method will fetch few number of messages from server when user wants to see more old messages by scrolling in downWords.
         count = 0;
         index = 0;
         Query query;
-        Log.d("MNBVCX", "function called");
-        if (messageList.size() == 0) {
-            //Fetch message for first time
-            query = messagesDatabaseRef.child(currentUser.getUid()).child(key).orderByChild("date").limitToLast(initialPageSize);
-            Log.d("MNBVCX", "if is called");
-        }else {
             //Fetch message for next time. When user scroll to see old messages.
-            Log.d("MNBVCX", "else part last message key = "+ messageListFirstMessageKey);
             query = messagesDatabaseRef.child(currentUser.getUid()).child(key).orderByKey().endAt(messageListFirstMessageKey).limitToLast(pageSize);
-        }
 
           ChildEventListener childEventListener = query.addChildEventListener(new ChildEventListener() {
                     @Override
                     public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-                        Log.d("MNBVCX", "key = "+snapshot.getKey());
-                        if (snapshot.exists()){
+                        if (snapshot.exists()) {
                             Message message = snapshot.getValue(Message.class);
-                            if (message != null){
+                            if (message != null) {
                                 message.setMessageKey(snapshot.getKey());
-                                if (! messageList.contains(message)){
+                                if (!messageList.contains(message)) {
                                     messageList.add(index, message);
+                                    //notify adapter that item is inserted in that position. By using this method hole recycler view will not be refreshed.
+                                    //In that way we have not set recycler view scroll position.
+                                    recyclerViewAdapter.notifyItemInserted(index);
                                     index++;
-                                    if (count == 0){
+                                    if (count == 0) {
                                         messageListFirstMessageKey = message.getMessageKey();
                                         count++;
                                     }
-                                    recyclerViewAdapter.notifyDataSetChanged();
-                                    Log.d("MNBVCX", "list size = "+messageList.size());
-                                    if(! isUserStartPagination) {
-                                        recyclerView.smoothScrollToPosition(recyclerViewAdapter.getItemCount());
-                                    }else {
-                                        recyclerView.smoothScrollToPosition(pageSize + 4);
+                                    if (friendType.equals(Constant.SINGLE_FRIEND)) {
+                                        setMessageReadStatusForOneToOneChat(message);
+                                    } else if (friendType.equals(Constant.GROUP_FRIEND)) {
+                                        setMessageReadStatusForGroupChat(message, key);
                                     }
                                 }
+
                             }
-                        }else {
-                            Log.d("MNBVCX", "snapshot not exist");
                         }
 
                     }
 
                     @Override
                     public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-
+                        if (snapshot.exists()){
+                            Message message = snapshot.getValue(Message.class);
+                            if (message != null) {
+                                message.setMessageKey(snapshot.getKey());
+                                if (message.isRead() && messageList.contains(message)) {
+                                    int elementPosition = messageList.indexOf(message);
+                                    messageList.set(elementPosition, message);
+                                    recyclerViewAdapter.notifyItemChanged(elementPosition);
+                                }
+                            }
+                        }
                     }
 
                     @Override
@@ -403,63 +467,6 @@ public class ChatActivity extends AppCompatActivity {
     }
 
 
-    private void showChatMessages(){
-/*
-        messageList.clear();
-       testValueEventListener = messagesDatabaseRef.child(currentUser.getUid()).child(key)
-                .addChildEventListener(new ChildEventListener() {
-                    @Override
-                    public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-                        if (snapshot.exists()) {
-                            Message message = snapshot.getValue(Message.class);
-                            if (message != null) {
-                                message.setMessageKey(snapshot.getKey());
-                                messageList.add(message);
-                                recyclerViewAdapter.notifyDataSetChanged();
-                                chatRecyclerView.smoothScrollToPosition(recyclerViewAdapter.getItemCount());
-                                if (friendType.equals(Constant.SINGLE_FRIEND)) {
-                                    setMessageReadStatusForOneToOneChat(message);
-                                }else if (friendType.equals(Constant.GROUP_FRIEND)){
-                                    setMessageReadStatusForGroupChat(message, key);
-                                }
-                            }
-
-                        }
-                    }
-
-                    @Override
-                    public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-                        if (snapshot.exists()){
-                                Message message = snapshot.getValue(Message.class);
-                                if (message != null) {
-                                    message.setMessageKey(snapshot.getKey());
-                                    if (message.isRead() && messageList.contains(message)) {
-                                        int elementPosition = messageList.indexOf(message);
-                                        messageList.set(elementPosition, message);
-                                        recyclerViewAdapter.notifyItemChanged(elementPosition);
-                                    }
-                                }
-                        }
-                    }
-
-                    @Override
-                    public void onChildRemoved(@NonNull DataSnapshot snapshot) {
-
-                    }
-
-                    @Override
-                    public void onChildMoved(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-
-                    }
-
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError error) {
-
-                    }
-                });
-
- */
-    }
 
 
 
@@ -602,10 +609,8 @@ public class ChatActivity extends AppCompatActivity {
                                 } else {
                                     Picasso.get().load(R.drawable.user_icon).placeholder(R.drawable.user_icon).into(profileImageView);
                                 }
-                                ////////////////
                                 recyclerViewAdapter.setProfileImageUrl(profileImageUrl);
-//                                showChatMessages();
-                                fetchChatMessages(key);
+                                fetchChatMessagesForFirstTime(key);
                             }
                         }
                     }
@@ -664,8 +669,7 @@ public class ChatActivity extends AppCompatActivity {
                                 } else {
                                     Picasso.get().load(R.drawable.ic_group_icon_white).placeholder(R.drawable.ic_group_icon_white).into(profileImageView);
                                 }
-                                /////////////////////
-                                fetchChatMessages(key);
+                                fetchChatMessagesForFirstTime(key);
 
                             }
                         }

@@ -8,6 +8,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -27,7 +28,7 @@ import com.nisith.smartchat.HomeActivity;
 import com.nisith.smartchat.Model.Friend;
 import com.nisith.smartchat.R;
 
-public class FriendsFragment extends Fragment implements MyFriendFragmentRecyclerAdapter.OnFriendFragmentViewsClickListener {
+public class FriendsFragment extends Fragment implements MyFriendFragmentRecyclerAdapter.OnFriendFragmentViewsClickListener, HomeActivity.OnSearchTextChangeListener {
 
     private RecyclerView recyclerView;
     private FloatingActionButton floatingActionButton;
@@ -114,5 +115,12 @@ public class FriendsFragment extends Fragment implements MyFriendFragmentRecycle
         FriendImageClickDialog dialog = new FriendImageClickDialog(friendUid);
         dialog.show(getActivity().getSupportFragmentManager(),"smart chat");
     }
+
+    @Override
+    public void onSearchTextChange(String newText, int selectedTabIndex) {
+        Log.d("MNBVCX","Friend Fragment input = "+ newText);
+        Log.d("MNBVCX","Tab index = "+ selectedTabIndex);
+    }
+
 
 }

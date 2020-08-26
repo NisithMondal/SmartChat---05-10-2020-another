@@ -63,8 +63,8 @@ public class MyFriendRequestFragmentRecyclerAdapter extends RecyclerView.Adapter
         if (friendRequest.getRequestType().equals(Constant.SEND_REQUEST)) {
             holder.requestTypeTextView.setText("Request Send");
             holder.requestTypeTextView.setCompoundDrawablesRelativeWithIntrinsicBounds(null,null, fragment.getActivity().getDrawable(R.drawable.ic_arrow_up_icon),null);
-            holder.acceptRequestButton.setVisibility(View.GONE);
-            holder.declineRequestButton.setText("Cancel Request");
+            holder.acceptRequestButton.setVisibility(View.INVISIBLE);
+            holder.declineRequestButton.setText("Cancel Req.");
             holder.declineRequestButton.setBackground(fragment.getActivity().getDrawable(R.drawable.button_background_shape4));
         }else {
             holder.requestTypeTextView.setText("Request Received");

@@ -2,12 +2,14 @@ package com.nisith.smartchat;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SearchView;
 import androidx.appcompat.widget.Toolbar;
 import androidx.viewpager.widget.PagerAdapter;
 import androidx.viewpager.widget.ViewPager;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -25,6 +27,9 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.nisith.smartchat.Adapters.MyPagerAdapter;
+import com.nisith.smartchat.Fragments.ChatFragment;
+import com.nisith.smartchat.Fragments.FriendsFragment;
+import com.nisith.smartchat.Fragments.GroupsFragment;
 import com.nisith.smartchat.Model.FriendRequest;
 import com.nisith.smartchat.Model.UserStatus;
 
@@ -34,6 +39,10 @@ import java.util.List;
 import java.util.Map;
 
 public class HomeActivity extends AppCompatActivity {
+
+    public interface OnSearchTextChangeListener {
+        void onSearchTextChange(String newText, int selectedTabIndex);
+    }
 
     private Toolbar appToolbar;
     private TextView toolbarTextView;
@@ -47,8 +56,11 @@ public class HomeActivity extends AppCompatActivity {
     private View badgeViewForChats, badgeViewForRequests;
     private TextView badgeHeadingTextViewForChats, badgeItemsTextViewForChats;
     private TextView badgeHeadingTextViewForRequests, badgeItemsTextViewForRequests;
-
     private List<String> unseenFriendRequestKeyList;
+    private OnSearchTextChangeListener searchTextChangeListener;
+    private FriendsFragment friendsFragment;
+    private ChatFragment chatsFragment;
+    private GroupsFragment groupsFragment;
 
 
 
@@ -61,6 +73,8 @@ public class HomeActivity extends AppCompatActivity {
         setTitle("");
         toolbarTextView.setText("Smart Chat");
         setUpTabLayoutWithViewPager();
+        //////////////////////////////////////
+        searchTextChangeListener = friendsFragment;
         //Firebase
         firebaseAuth = FirebaseAuth.getInstance();
         currentUser = firebaseAuth.getCurrentUser();
@@ -106,6 +120,13 @@ public class HomeActivity extends AppCompatActivity {
         MyPagerAdapter myPagerAdapter = new MyPagerAdapter(getSupportFragmentManager(), PagerAdapter.POSITION_NONE);
         viewPager.setAdapter(myPagerAdapter);
         tabLayout.setupWithViewPager(viewPager);
+        initializeFragmentObjects(myPagerAdapter);
+    }
+
+    private void initializeFragmentObjects(MyPagerAdapter myPagerAdapter){
+        chatsFragment = (ChatFragment) myPagerAdapter.getItem(0);
+        groupsFragment = (GroupsFragment) myPagerAdapter.getItem(1);
+        friendsFragment = (FriendsFragment) myPagerAdapter.getItem(2);
     }
 
 
@@ -248,6 +269,35 @@ public class HomeActivity extends AppCompatActivity {
         super.onCreateOptionsMenu(menu);
         MenuInflater menuInflater = getMenuInflater();
         menuInflater.inflate(R.menu.app_menu,menu);
+        final SearchView searchView = (SearchView) menu.findItem(R.id.search_view).getActionView();
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                    switch (getSelectedTabPosition()){
+                        case 0:
+                            //Chats Fragment is selected
+                            searchTextChangeListener = chatsFragment;
+                            searchTextChangeListener.onSearchTextChange(newText, 0);
+                            break;
+                        case 1:
+                            //Groups Fragment is selected
+                            searchTextChangeListener = groupsFragment;
+                            searchTextChangeListener.onSearchTextChange(newText, 1);
+                            break;
+                        case 2:
+                            //Friends Fragment is selected
+                            searchTextChangeListener = friendsFragment;
+                            searchTextChangeListener.onSearchTextChange(newText, 2);
+                            break;
+                    }
+                return true;
+            }
+        });
         return true;
     }
 
