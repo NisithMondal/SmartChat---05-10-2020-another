@@ -24,14 +24,17 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.nisith.smartchat.Model.Friend;
 import com.nisith.smartchat.Model.GroupProfile;
+import com.nisith.smartchat.Model.UserProfile;
 import com.squareup.picasso.Picasso;
 import com.theartofdev.edmodo.cropper.CropImage;
 import com.theartofdev.edmodo.cropper.CropImageView;
@@ -57,7 +60,7 @@ public class CreateGroupActivity extends AppCompatActivity {
     private DatabaseReference rootDatabaseRef, groupFriendsDatabaseRef, friendsDatabaseRef;
     private StorageReference rootStorageReference;
     private byte[] groupProfileImageByteArray;
-    private String currentUserUid;
+    private String currentUserUid, groupName;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,9 +88,9 @@ public class CreateGroupActivity extends AppCompatActivity {
         groupNameEditText = findViewById(R.id.group_name_edit_text);
         aboutGroupEditView = findViewById(R.id.about_group_edit_text);
         createGroupButton = findViewById(R.id.create_group_button);
-
-
     }
+
+
 
 
     private class MyClickListener implements View.OnClickListener{
@@ -171,6 +174,7 @@ public class CreateGroupActivity extends AppCompatActivity {
         //Firebase
         final String groupKey = groupDatabaseRef.push().getKey();
         if (groupKey != null) {
+            this.groupName = groupName;
             progressBar.setVisibility(View.VISIBLE);
             createGroupButton.setEnabled(false);
             GroupProfile groupProfile = new GroupProfile(groupName, aboutGroup,1,"default");
@@ -200,7 +204,7 @@ public class CreateGroupActivity extends AppCompatActivity {
     private void handelFriendOperation(final String groupKey){
         //This method add current user to the specified group's 'group_friends' node and this group is added the current user's
         //'friends' node also ...
-        Friend friend = new Friend(System.currentTimeMillis(), Constant.GROUP_FRIEND);
+        Friend friend = new Friend(Constant.GROUP_FRIEND, groupName.toLowerCase(), System.currentTimeMillis());
         Map<String, Object> addFriendMap = new HashMap<>();
         addFriendMap.put("friends"+"/"+currentUserUid+"/"+groupKey,friend);  //group is added current user friend node
         addFriendMap.put("group_friends"+"/"+groupKey+"/"+currentUserUid,friend);// the current user is added to the group_friends node

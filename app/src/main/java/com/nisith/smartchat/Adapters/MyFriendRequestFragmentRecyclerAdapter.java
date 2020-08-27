@@ -14,6 +14,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.nisith.smartchat.Constant;
 import com.nisith.smartchat.Model.FriendRequest;
+import com.nisith.smartchat.Model.GroupProfile;
 import com.nisith.smartchat.Model.UserProfile;
 import com.nisith.smartchat.Model.ValueEventListenerModel;
 import com.nisith.smartchat.R;
@@ -30,13 +31,14 @@ import de.hdodenhof.circleimageview.CircleImageView;
 public class MyFriendRequestFragmentRecyclerAdapter extends RecyclerView.Adapter<MyFriendRequestFragmentRecyclerAdapter.MyViewHolder> {
 
     public interface OnRequestButtonClickListener{
-        void onRequestButtonClick(View view, FriendRequest friendRequest);
+        //Here search name is required to perform searching operation
+        void onRequestButtonClick(View view, FriendRequest friendRequest, String searchName);
     }
 
     private OnRequestButtonClickListener requestButtonClickListener;
     private Fragment fragment;
     private List<FriendRequest> friendRequestList;
-    private DatabaseReference userDatabaseRef;
+    private DatabaseReference userDatabaseRef, groupsDatabaseRef;
     private String currentUserId;
     private List<ValueEventListenerModel> removeListenerFromSingleFriendList, removeListenerFromGroupFriendList;
 
@@ -45,6 +47,7 @@ public class MyFriendRequestFragmentRecyclerAdapter extends RecyclerView.Adapter
         this.friendRequestList = friendRequestList;
         this.requestButtonClickListener = (OnRequestButtonClickListener) fragment;
         userDatabaseRef = FirebaseDatabase.getInstance().getReference().child("users");
+        groupsDatabaseRef = FirebaseDatabase.getInstance().getReference().child("groups");
         currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
         removeListenerFromSingleFriendList = new ArrayList<>();
         removeListenerFromGroupFriendList = new ArrayList<>();
@@ -130,7 +133,6 @@ public class MyFriendRequestFragmentRecyclerAdapter extends RecyclerView.Adapter
 
                 @Override
                 public void onCancelled(@NonNull DatabaseError error) {
-
                 }
             });
 //            removeListenerFromGroupFriendList.add(new ValueEventListenerModel(uId, groupValueEventListener));
@@ -188,8 +190,56 @@ public class MyFriendRequestFragmentRecyclerAdapter extends RecyclerView.Adapter
         }
         @Override
         public void onClick(final View view) {
-            FriendRequest friendRequest = friendRequestList.get(myViewHolder.getAbsoluteAdapterPosition());
-            requestButtonClickListener.onRequestButtonClick(view, friendRequest);
+            final FriendRequest friendRequest = friendRequestList.get(myViewHolder.getAbsoluteAdapterPosition());
+            if (friendRequest.getRequestType().equals(Constant.RECEIVE_REQUEST)){
+                if (! friendRequest.isGroup()){
+                    //one to one friend request received
+                    userDatabaseRef.child(friendRequest.getSenderOrReceiverUid()).addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot snapshot) {
+                            if (snapshot.exists()){
+                                UserProfile userProfile = snapshot.getValue(UserProfile.class);
+                                if (userProfile != null) {
+                                    String  friendName = "";
+                                    //name of the friend who send this request
+                                    friendName = userProfile.getUserName();
+                                    requestButtonClickListener.onRequestButtonClick(view, friendRequest, friendName);
+                                }
+                            }
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError error) {
+
+                        }
+                    });
+
+                }else {
+                    //group Request receive
+                    groupsDatabaseRef.child(friendRequest.getGroupKey()).addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot snapshot) {
+                            if (snapshot.exists()){
+                                GroupProfile groupProfile = snapshot.getValue(GroupProfile.class);
+                                if (groupProfile != null){
+                                    String groupName = "";
+                                    groupName = groupProfile.getGroupName();
+                                    requestButtonClickListener.onRequestButtonClick(view, friendRequest, groupName);
+                                }
+                            }
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError error) {
+
+                        }
+                    });
+                }
+            }else if (friendRequest.getRequestType().equals(Constant.SEND_REQUEST)){
+                //here search name is not necessary
+                //current user send friend request
+                requestButtonClickListener.onRequestButtonClick(view, friendRequest, "");
+            }
         }
     }
 }

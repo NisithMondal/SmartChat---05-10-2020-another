@@ -29,7 +29,7 @@ import com.nisith.smartchat.HomeActivity;
 import com.nisith.smartchat.Model.Friend;
 import com.nisith.smartchat.R;
 
-public class GroupsFragment extends Fragment implements MyGroupFragmentRecyclerAdapter.OnGroupFragmentViewsClickListener, HomeActivity.OnSearchTextChangeListener {
+public class GroupsFragment extends Fragment implements MyGroupFragmentRecyclerAdapter.OnGroupFragmentViewsClickListener{
 
     private RecyclerView recyclerView;
     private FloatingActionButton floatingActionButton;
@@ -119,9 +119,4 @@ public class GroupsFragment extends Fragment implements MyGroupFragmentRecyclerA
     }
 
 
-    @Override
-    public void onSearchTextChange(String newText, int selectedTabIndex) {
-        Log.d("MNBVCX","Group Fragment input = "+ newText);
-        Log.d("MNBVCX","Tab index = "+ selectedTabIndex);
-    }
 }

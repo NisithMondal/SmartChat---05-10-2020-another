@@ -21,6 +21,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ServerValue;
+import com.google.firebase.database.ValueEventListener;
 import com.nisith.smartchat.AcceptDeclineGroupRequestActivity;
 import com.nisith.smartchat.Adapters.MyFriendRequestFragmentRecyclerAdapter;
 import com.nisith.smartchat.Constant;
@@ -29,6 +30,7 @@ import com.nisith.smartchat.FriendsProfileActivity;
 import com.nisith.smartchat.FriendsProfileActivityForGroup;
 import com.nisith.smartchat.Model.Friend;
 import com.nisith.smartchat.Model.FriendRequest;
+import com.nisith.smartchat.Model.UserProfile;
 import com.nisith.smartchat.R;
 
 import java.util.ArrayList;
@@ -46,8 +48,9 @@ public class FriendRequestFragment extends Fragment implements MyFriendRequestFr
     private DatabaseReference currentUserFriendRequestDatabaseRef;
     private DatabaseReference friendRequestRootDatabaseRef;
     private ChildEventListener childEventListener;
-    private String currentUserId;
+    private String currentUserId, currentUserName = "";
     private String requestSenderUid, requestReceiverUid;
+
     public FriendRequestFragment() {
         // Required empty public constructor
     }
@@ -69,6 +72,7 @@ public class FriendRequestFragment extends Fragment implements MyFriendRequestFr
         currentUserFriendRequestDatabaseRef = FirebaseDatabase.getInstance().getReference().child("friend_requests").child(currentUserId);
         friendRequestRootDatabaseRef = FirebaseDatabase.getInstance().getReference().child("friend_requests");
         friendsDatabaseRef = FirebaseDatabase.getInstance().getReference().child("friends");
+        getCurrentUserName();
         friendRequestList = new ArrayList<>();
         setUpRecyclerViewWithAdapter();
     }
@@ -80,6 +84,27 @@ public class FriendRequestFragment extends Fragment implements MyFriendRequestFr
         recyclerView.setHasFixedSize(true);
         recyclerView.setAdapter(adapter);
     }
+
+
+    private void getCurrentUserName(){
+        rootDatabaseRef.child("users").child(currentUserId).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists()){
+                    UserProfile userProfile = snapshot.getValue(UserProfile.class);
+                    if (userProfile != null){
+                        currentUserName = userProfile.getUserName();
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+    }
+
 
     @Override
     public void onStart() {
@@ -160,7 +185,7 @@ public class FriendRequestFragment extends Fragment implements MyFriendRequestFr
 
 
     @Override
-    public void onRequestButtonClick(View view, FriendRequest friendRequest) {
+    public void onRequestButtonClick(View view, FriendRequest friendRequest, String searchName) {
         //check if the clicked friend request is for group request or not
         boolean isRequestForGroup = friendRequest.isGroup();
         String friendUid = friendRequest.getSenderOrReceiverUid();
@@ -196,7 +221,8 @@ public class FriendRequestFragment extends Fragment implements MyFriendRequestFr
 
             case R.id.accept_request_button:
                 //Accept Button is Clicked
-                acceptFriendRequest(friendUid, groupKey, isRequestForGroup);
+                acceptFriendRequest(friendUid, groupKey, isRequestForGroup, searchName);
+                Log.d("ZXCVBNM","Current user Name = "+currentUserName);
                 break;
 
             case R.id.decline_request_button:
@@ -218,7 +244,7 @@ public class FriendRequestFragment extends Fragment implements MyFriendRequestFr
         dialog.show(getActivity().getSupportFragmentManager(),"smart chat");
     }
 
-    private void acceptFriendRequest(String friendUid, final String groupKey, boolean isRequestForGroup){
+    private void acceptFriendRequest(String friendUid, final String groupKey, boolean isRequestForGroup, final String searchName){
         requestSenderUid = currentUserId; //means Current User Id
         requestReceiverUid = friendUid; //means Friend User Id
 
@@ -233,14 +259,19 @@ public class FriendRequestFragment extends Fragment implements MyFriendRequestFr
                 public void onComplete(@Nullable DatabaseError error, @NonNull DatabaseReference ref) {
                     if (error == null) {
                         //all ok
-                        Friend friend = new Friend(System.currentTimeMillis(), Constant.SINGLE_FRIEND);
+                        String friendName = searchName;
+                        Friend senderFriendObj = new Friend( Constant.SINGLE_FRIEND, friendName.toLowerCase(), System.currentTimeMillis());
+                        Friend receiverFriendObj = new Friend(Constant.SINGLE_FRIEND, currentUserName.toLowerCase(),System.currentTimeMillis());
                         Map<String, Object> friendsMap = new HashMap<>();
-                        friendsMap.put(requestSenderUid + "/" + requestReceiverUid, friend);
-                        friendsMap.put(requestReceiverUid + "/" + requestSenderUid, friend);
+                        friendsMap.put(requestSenderUid + "/" + requestReceiverUid, senderFriendObj);
+                        friendsMap.put(requestReceiverUid + "/" + requestSenderUid, receiverFriendObj);
                         friendsDatabaseRef.updateChildren(friendsMap);
                     }
                 }
             });
+
+
+
         }else {
             //Request is for group friend request
             //here 'read' is true, means user seen the notification
@@ -251,7 +282,8 @@ public class FriendRequestFragment extends Fragment implements MyFriendRequestFr
                 public void onComplete(@Nullable DatabaseError error, @NonNull DatabaseReference ref) {
                     if (error == null){
                         //means all ok
-                        Friend friend = new Friend(System.currentTimeMillis(), Constant.GROUP_FRIEND);
+                        String groupName = searchName;
+                        Friend friend = new Friend(Constant.GROUP_FRIEND, groupName.toLowerCase(), System.currentTimeMillis());
                         Map<String, Object> addFriendMap = new HashMap<>();
                         addFriendMap.put("friends"+"/"+currentUserId+"/"+groupKey,friend);  //group is added current user friend's node
                         addFriendMap.put("group_friends"+"/"+groupKey+"/"+currentUserId,friend);// the current user is added to the group friend's node
@@ -272,6 +304,7 @@ public class FriendRequestFragment extends Fragment implements MyFriendRequestFr
             });
         }
     }
+
 
 
 

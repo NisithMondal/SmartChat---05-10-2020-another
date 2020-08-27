@@ -38,9 +38,9 @@ import java.util.Map;
      private TextView userNameTextView, userStatusTextView, userInfoTextView, infoTextHeading;
      private Button friendRequestButton, declineRequestButton;
      private TextView displayMessageTextView;
-     private String friendName, profileImageUrl;
+     private String friendName, currentUserName, profileImageUrl;
      //Firebase
-     private DatabaseReference databaseRef;
+     private DatabaseReference databaseRef, rootDatabaseRef;
      private DatabaseReference friendRequestDatabaseRef;
      private DatabaseReference friendsDatabaseRef;
      private ValueEventListener valueEventListener;
@@ -69,10 +69,12 @@ import java.util.Map;
             databaseRef = FirebaseDatabase.getInstance().getReference().child("users").child(friendUid);
             friendRequestDatabaseRef = FirebaseDatabase.getInstance().getReference().child("friend_requests");
             friendsDatabaseRef = FirebaseDatabase.getInstance().getReference().child("friends");
+            rootDatabaseRef = FirebaseDatabase.getInstance().getReference();
             requestSenderUid = FirebaseAuth.getInstance().getCurrentUser().getUid(); //means Current User Id
             currentUserId = requestSenderUid;
             requestReceiverUid = friendUid; //means Friend User Id
             setFriendRequestButtonState();
+            getCurrentUserName();
         }
         friendRequestButton.setOnClickListener(new MyButtonClickListener());
         declineRequestButton.setOnClickListener(new MyButtonClickListener());
@@ -85,8 +87,6 @@ import java.util.Map;
                 startActivity(imageDisplayIntent);
             }
         });
-
-
     }
 
     private void initializeViews(){
@@ -101,6 +101,27 @@ import java.util.Map;
         declineRequestButton = findViewById(R.id.decline_request_button);
         displayMessageTextView = findViewById(R.id.display_message_text_view);
     }
+
+
+     private void getCurrentUserName(){
+         rootDatabaseRef.child("users").child(currentUserId).addListenerForSingleValueEvent(new ValueEventListener() {
+             @Override
+             public void onDataChange(@NonNull DataSnapshot snapshot) {
+                 if (snapshot.exists()){
+                     UserProfile userProfile = snapshot.getValue(UserProfile.class);
+                     if (userProfile != null){
+                         currentUserName = userProfile.getUserName();
+                     }
+                 }
+             }
+
+             @Override
+             public void onCancelled(@NonNull DatabaseError error) {
+
+             }
+         });
+     }
+
 
     private void showFriendProfile(){
       valueEventListener = databaseRef.addValueEventListener(new ValueEventListener() {
@@ -278,11 +299,11 @@ import java.util.Map;
             public void onComplete(@Nullable DatabaseError error, @NonNull DatabaseReference ref) {
                 if (error == null){
                     //all ok
-//                    Map<String, Object> map1 = new HashMap<>();
-                    Friend friend = new Friend(System.currentTimeMillis(), Constant.SINGLE_FRIEND);
+                    Friend senderFriendObj = new Friend(Constant.SINGLE_FRIEND, friendName.toLowerCase(), System.currentTimeMillis());
+                    Friend receiverFriendObj = new Friend(Constant.SINGLE_FRIEND, currentUserName.toLowerCase(), System.currentTimeMillis());
                     Map<String, Object> friendsMap = new HashMap<>();
-                    friendsMap.put(requestSenderUid+"/"+requestReceiverUid,friend);
-                    friendsMap.put(requestReceiverUid+"/"+requestSenderUid,friend);
+                    friendsMap.put(requestSenderUid+"/"+requestReceiverUid,senderFriendObj);
+                    friendsMap.put(requestReceiverUid+"/"+requestSenderUid,receiverFriendObj);
                     friendsDatabaseRef.updateChildren(friendsMap);
 
                 }

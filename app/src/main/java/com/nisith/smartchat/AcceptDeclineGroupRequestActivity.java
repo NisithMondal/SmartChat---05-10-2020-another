@@ -33,7 +33,7 @@ import java.util.Map;
 
 public class AcceptDeclineGroupRequestActivity extends AppCompatActivity {
     private Toolbar appToolbar;
-    private TextView toolbarTextView;
+//    private TextView toolbarTextView;
     private ImageView groupProfileImageView;
     private CircleImageView friendProfileImageView;
     private TextView friendNameTextView, aboutGroupTextView, displayMessageTextView, groupNameTextView;
@@ -42,7 +42,7 @@ public class AcceptDeclineGroupRequestActivity extends AppCompatActivity {
     private DatabaseReference rootDatabaseRef, friendUserDatabaseRef, friendsDatabaseRef, friendRequestDatabaseRef, currentGroupDatabaseRef, groupFriendsDatabaseRef;
     private ValueEventListener valueEventListener;
     private String currentUserId, friendUid, requestSenderUid, requestReceiverUid, groupKey;
-    private String friendName, userProfileImageUrl;
+    private String groupName, friendName, userProfileImageUrl;
 
 
 
@@ -55,8 +55,8 @@ public class AcceptDeclineGroupRequestActivity extends AppCompatActivity {
         initializeViews();
         setSupportActionBar(appToolbar);
         setTitle("");
-        toolbarTextView.setText("Group Request");
-        toolbarTextView.setTextColor(Color.BLACK);
+//        toolbarTextView.setText("Group Request");
+//        toolbarTextView.setTextColor(Color.BLACK);
         appToolbar.setNavigationIcon(R.drawable.ic_back_arrow_icon);
         appToolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
@@ -85,7 +85,7 @@ public class AcceptDeclineGroupRequestActivity extends AppCompatActivity {
 
     private void initializeViews(){
         appToolbar = findViewById(R.id.app_toolbar);
-        toolbarTextView = findViewById(R.id.toolbar_text_view);
+//        toolbarTextView = appToolbar.findViewById(R.id.toolbar_text_view);
         groupProfileImageView = findViewById(R.id.group_profile_image_view);
         friendProfileImageView = findViewById(R.id.friend_profile_image_view);
         groupNameTextView = findViewById(R.id.group_name_text_view);
@@ -95,6 +95,9 @@ public class AcceptDeclineGroupRequestActivity extends AppCompatActivity {
         rejectGroupButton = findViewById(R.id.reject_group_button);
         displayMessageTextView = findViewById(R.id.display_message_text_view);
     }
+
+
+
 
     @Override
     protected void onStart() {
@@ -122,7 +125,7 @@ public class AcceptDeclineGroupRequestActivity extends AppCompatActivity {
                     if (snapshot.exists()){
                         GroupProfile groupProfile = snapshot.getValue(GroupProfile.class);
                         if (groupProfile != null){
-                            String groupName = groupProfile.getGroupName();
+                            groupName = groupProfile.getGroupName();
                             String aboutGroup = groupProfile.getAboutGroup();
                             groupNameTextView.setText(groupName);
                             aboutGroupTextView.setText(aboutGroup);
@@ -251,10 +254,10 @@ public class AcceptDeclineGroupRequestActivity extends AppCompatActivity {
             public void onComplete(@Nullable DatabaseError error, @NonNull DatabaseReference ref) {
                 if (error == null){
                     //means all ok
-                    Friend friend = new Friend(System.currentTimeMillis(), Constant.GROUP_FRIEND);
+                    Friend friend = new Friend(Constant.GROUP_FRIEND, groupName.toLowerCase(), System.currentTimeMillis());
                     Map<String, Object> addFriendMap = new HashMap<>();
-                    addFriendMap.put("friends"+"/"+currentUserId+"/"+groupKey,friend);  //group is added current user friend's node
-                    addFriendMap.put("group_friends"+"/"+groupKey+"/"+currentUserId,friend);// the current user is added to the group friend's node
+                    addFriendMap.put("friends"+"/"+currentUserId+"/"+groupKey, friend);  //group is added current user friend's node
+                    addFriendMap.put("group_friends"+"/"+groupKey+"/"+currentUserId, friend);// the current user is added to the group friend's node
                     rootDatabaseRef.updateChildren(addFriendMap, new DatabaseReference.CompletionListener() {
                         @Override
                         public void onComplete(@Nullable DatabaseError error, @NonNull DatabaseReference ref) {
