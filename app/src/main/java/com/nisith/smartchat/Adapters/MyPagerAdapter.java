@@ -5,6 +5,7 @@ import com.nisith.smartchat.Fragments.ChatFragment;
 import com.nisith.smartchat.Fragments.FriendRequestFragment;
 import com.nisith.smartchat.Fragments.FriendsFragment;
 import com.nisith.smartchat.Fragments.GroupsFragment;
+import com.nisith.smartchat.Fragments.NotificationFragment;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -30,9 +31,10 @@ public class MyPagerAdapter extends FragmentPagerAdapter {
                 return new GroupsFragment();
             case 2:
                 return new FriendsFragment();
-
             case 3:
                 return new FriendRequestFragment();
+            case 4:
+                return new NotificationFragment();
             default:
                 return null;
         }
@@ -40,7 +42,7 @@ public class MyPagerAdapter extends FragmentPagerAdapter {
 
     @Override
     public int getCount() {
-        return 4;
+        return 5;
     }
 
     @Nullable
@@ -55,6 +57,8 @@ public class MyPagerAdapter extends FragmentPagerAdapter {
                 return "Friends";
             case 3:
                 return "Request";
+            case 4:
+                return "Notifications";
             default:
                 return null;
         }

@@ -8,23 +8,24 @@ import de.hdodenhof.circleimageview.CircleImageView;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ServerValue;
 import com.google.firebase.database.ValueEventListener;
 import com.nisith.smartchat.Model.Friend;
 import com.nisith.smartchat.Model.FriendRequest;
+import com.nisith.smartchat.Model.UserNotification;
 import com.nisith.smartchat.Model.UserProfile;
+import com.nisith.smartchat.Notification.MyNotification;
 import com.squareup.picasso.Picasso;
 
 import java.util.HashMap;
@@ -38,7 +39,7 @@ import java.util.Map;
      private TextView userNameTextView, userStatusTextView, userInfoTextView, infoTextHeading;
      private Button friendRequestButton, declineRequestButton;
      private TextView displayMessageTextView;
-     private String friendName, currentUserName, profileImageUrl;
+     private String friendName, currentUserName, profileImageUrl, currentUserImageUrl;
      //Firebase
      private DatabaseReference databaseRef, rootDatabaseRef;
      private DatabaseReference friendRequestDatabaseRef;
@@ -74,7 +75,7 @@ import java.util.Map;
             currentUserId = requestSenderUid;
             requestReceiverUid = friendUid; //means Friend User Id
             setFriendRequestButtonState();
-            getCurrentUserName();
+            getCurrentUserInfo();
         }
         friendRequestButton.setOnClickListener(new MyButtonClickListener());
         declineRequestButton.setOnClickListener(new MyButtonClickListener());
@@ -103,7 +104,7 @@ import java.util.Map;
     }
 
 
-     private void getCurrentUserName(){
+     private void getCurrentUserInfo(){
          rootDatabaseRef.child("users").child(currentUserId).addListenerForSingleValueEvent(new ValueEventListener() {
              @Override
              public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -111,6 +112,7 @@ import java.util.Map;
                      UserProfile userProfile = snapshot.getValue(UserProfile.class);
                      if (userProfile != null){
                          currentUserName = userProfile.getUserName();
+                         currentUserImageUrl = userProfile.getProfileImage();
                      }
                  }
              }
@@ -277,7 +279,8 @@ import java.util.Map;
             dataMap.put(requestReceiverUid + "/" + requestSenderUid, new FriendRequest(Constant.RECEIVE_REQUEST,false, "",requestSenderUid, System.currentTimeMillis(), false));
             requestStatus = Constant.SEND_REQUEST;
             friendRequestDatabaseRef.updateChildren(dataMap);
-
+            //Save Friend Request notification to firebase
+            saveFriendRequestNotificationOnFirebase();
         }else if (requestStatus.equals(Constant.SEND_REQUEST)){
           //Current user wants to Cancel friend request
           cancelFriendRequest();
@@ -286,6 +289,32 @@ import java.util.Map;
             acceptFriendRequest();
 
         }
+     }
+
+
+
+     private void saveFriendRequestNotificationOnFirebase(){
+         final String title = "Friend Request";
+         final String body = currentUserName+" send you friend request.";
+         String key = rootDatabaseRef.child("notification").child(currentUserId).child(Constant.ALL_NOTIFICATION).push().getKey();
+         UserNotification userNotification = new UserNotification(title, body, System.currentTimeMillis(),"date_time"
+                 ,currentUserImageUrl, currentUserId, "blank");
+        Map<String, Object> map = new HashMap<>();
+        map.put(requestReceiverUid + "/" + Constant.ALL_NOTIFICATION + "/" +key , userNotification);
+        rootDatabaseRef.child("notification").updateChildren(map)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        //Current user send friend request. So, have to show friend request notification
+                       sendFriendRequestNotification(title, body);
+                    }
+                });
+     }
+
+
+     private void sendFriendRequestNotification(String title, String body) {
+         MyNotification myNotification = new MyNotification(getApplicationContext());
+         myNotification.send(title, body, requestReceiverUid, null, currentUserImageUrl);
      }
 
 
@@ -305,11 +334,36 @@ import java.util.Map;
                     friendsMap.put(requestSenderUid+"/"+requestReceiverUid,senderFriendObj);
                     friendsMap.put(requestReceiverUid+"/"+requestSenderUid,receiverFriendObj);
                     friendsDatabaseRef.updateChildren(friendsMap);
-
+                    saveAcceptRequestNotificationOnFirebase();
                 }
             }
         });
+     }
 
+
+     private void saveAcceptRequestNotificationOnFirebase(){
+         final String title = "Accept Request";
+         final String body = currentUserName+" accept your friend request.";
+         String key = rootDatabaseRef.child("notification").child(currentUserId).child(Constant.ALL_NOTIFICATION).push().getKey();
+         UserNotification userNotification = new UserNotification(title, body, System.currentTimeMillis(),"date_time"
+                 ,currentUserImageUrl, currentUserId, "blank");
+         Map<String, Object> map = new HashMap<>();
+         map.put(friendUid + "/" + Constant.ALL_NOTIFICATION + "/" +key , userNotification);
+         rootDatabaseRef.child("notification").updateChildren(map)
+                 .addOnSuccessListener(new OnSuccessListener<Void>() {
+                     @Override
+                     public void onSuccess(Void aVoid) {
+                         //Current user Accept friend request. So, have to show Accept request notification
+                         acceptFriendRequestNotification(title, body);
+                     }
+                 });
+     }
+
+
+     private void acceptFriendRequestNotification(String title, String body) {
+        //when current user accept his/her friend request, then send notification to that friend that current user accept his/her friend request.
+         MyNotification myNotification = new MyNotification(getApplicationContext());
+         myNotification.send(title, body, friendUid, null, currentUserImageUrl);
      }
 
      private void declineFriendRequest(){

@@ -1,7 +1,6 @@
 package com.nisith.smartchat;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import de.hdodenhof.circleimageview.CircleImageView;
@@ -19,12 +18,11 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ServerValue;
 import com.google.firebase.database.ValueEventListener;
-import com.nisith.smartchat.Model.Friend;
 import com.nisith.smartchat.Model.FriendRequest;
 import com.nisith.smartchat.Model.GroupProfile;
 import com.nisith.smartchat.Model.UserProfile;
+import com.nisith.smartchat.Notification.MyNotification;
 import com.squareup.picasso.Picasso;
 
 import java.util.HashMap;
@@ -38,10 +36,11 @@ public class FriendsProfileActivityForGroup extends AppCompatActivity {
     private TextView userNameTextView, userStatusTextView, userInfoTextView, infoTextHeading;
     private Button friendRequestButton, declineRequestButton;
     private TextView displayMessageTextView, groupNameTextView;
+    private String groupName, currentUserName;
     //Firebase
     private DatabaseReference rootDatabaseRef, friendUserDatabaseRef, friendsDatabaseRef, friendRequestDatabaseRef, currentGroupDatabaseRef;
     private ValueEventListener valueEventListener;
-    private String friendName, userProfileImageUrl;
+    private String friendName, userProfileImageUrl, currentUserImageUrl;
     private String currentUserId, friendUid, requestSenderUid, requestReceiverUid, groupKey;
     private String requestStatus = Constant.NOT_GROUP_FRIEND; //status of request i.e. send_request, cancel_request, accept_request, decline_request
 
@@ -64,6 +63,7 @@ public class FriendsProfileActivityForGroup extends AppCompatActivity {
         Intent intent = getIntent();
         friendUid = intent.getStringExtra(Constant.FRIEND_UID);
         groupKey = intent.getStringExtra(Constant.GROUP_KEY);
+
         if (friendUid != null){
             rootDatabaseRef = FirebaseDatabase.getInstance().getReference();
             friendUserDatabaseRef = FirebaseDatabase.getInstance().getReference().child("users").child(friendUid);
@@ -73,6 +73,7 @@ public class FriendsProfileActivityForGroup extends AppCompatActivity {
             requestSenderUid = FirebaseAuth.getInstance().getCurrentUser().getUid(); //means Current User Id
             currentUserId = requestSenderUid;
             requestReceiverUid = friendUid; //means Friend User Id
+            getCurrentUserName();
         }
         friendRequestButton.setOnClickListener(new MyButtonClickListener());
         declineRequestButton.setOnClickListener(new MyButtonClickListener());
@@ -104,6 +105,26 @@ public class FriendsProfileActivityForGroup extends AppCompatActivity {
         groupNameTextView = findViewById(R.id.group_name_text_view);
     }
 
+
+    private void getCurrentUserName(){
+        rootDatabaseRef.child("users").child(currentUserId).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists()){
+                    UserProfile userProfile = snapshot.getValue(UserProfile.class);
+                    if (userProfile != null){
+                        currentUserName = userProfile.getUserName();
+                        currentUserImageUrl = userProfile.getProfileImage();
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+    }
 
     @Override
     protected void onStart() {
@@ -164,7 +185,7 @@ public class FriendsProfileActivityForGroup extends AppCompatActivity {
                     if (snapshot.exists()){
                         GroupProfile groupProfile = snapshot.getValue(GroupProfile.class);
                         if (groupProfile != null){
-                            String groupName = groupProfile.getGroupName();
+                            groupName = groupProfile.getGroupName();
                             String groupProfileImageUrl = groupProfile.getGroupProfileImage();
                             groupNameTextView.setText(groupName);
                             if (! userProfileImageUrl.equals("default")){
@@ -311,12 +332,21 @@ public class FriendsProfileActivityForGroup extends AppCompatActivity {
             dataMap.put(requestReceiverUid + "/" + requestSenderUid + groupKey, new FriendRequest(Constant.RECEIVE_REQUEST,  true, groupKey, requestSenderUid, System.currentTimeMillis(), false));
             requestStatus = Constant.SEND_REQUEST;
             friendRequestDatabaseRef.updateChildren(dataMap);
-
+            //Current user send Group request. So, have to show group request notification
+            sendGroupRequestNotification();
         }
         else if (requestStatus.equals(Constant.SEND_REQUEST)){
             //Current user wants to Cancel friend request
             cancelFriendRequest();
         }
+    }
+
+
+    private void sendGroupRequestNotification() {
+        String title = "Group Request";
+        String body = currentUserName+" wants to add you in this group: "+groupName;
+        MyNotification myNotification = new MyNotification(getApplicationContext());
+        myNotification.send(title, body, requestReceiverUid, null, currentUserImageUrl);
     }
 
     private void cancelFriendRequest(){

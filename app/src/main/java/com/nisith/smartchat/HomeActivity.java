@@ -46,6 +46,7 @@ import com.nisith.smartchat.Model.FriendRequest;
 import com.nisith.smartchat.Model.UserStatus;
 import com.nisith.smartchat.Notification.Model.Notification;
 import com.nisith.smartchat.Notification.Model.NotificationData;
+import com.nisith.smartchat.Notification.MyNotification;
 import com.nisith.smartchat.Notification.RetrofitServerRequest;
 
 import java.util.ArrayList;
@@ -56,9 +57,6 @@ import java.util.Objects;
 
 public class HomeActivity extends AppCompatActivity implements MySearchAdapter.OnSearchItemsClickListener {
 
-    //////////////////////
-    private Button sendNotificationButton;
-    ///////////////////
     private Toolbar appToolbar;
     private TextView toolbarTextView;
     private TabLayout tabLayout;
@@ -124,41 +122,9 @@ public class HomeActivity extends AppCompatActivity implements MySearchAdapter.O
 
             }
         });
-
-        /////////////////////////////////////
-        sendNotificationButton = findViewById(R.id.notification_button);
-        sendNotificationButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (currentUserId != null) {
-                    sendNotification("Friend Request", "Nisith Mondal sent you friend request", currentUserId, null);
-                }
-            }
-        });
     }
 
-    private void sendNotification(final String title, final String body, String senderUid, final String clickAction) {
-        notificationRootDatabaseRef.child(senderUid).child("device_token").addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if (snapshot.exists()){
-                    String receiverDeviceToken = snapshot.getValue().toString();
-                    Notification notification = new Notification(title, body, clickAction,
-                            "https://firebasestorage.googleapis.com/v0/b/smart-chat-faf2a.appspot.com/o/all_user_picture%2Fusers_profile_image%2FTMHY624KhgVwJS3rGC5Kb7sGr1n2.jpg?alt=media&token=09dfdc68-8288-4030-9b0e-c864d6591ba1");
-                    NotificationData data = new NotificationData(currentUserId);
-                    RetrofitServerRequest serverRequest = new RetrofitServerRequest(getApplicationContext());
-                    serverRequest.sendNotification(receiverDeviceToken, notification, data);
-                }else {
-                    Toast.makeText(HomeActivity.this, "Something went wrong", Toast.LENGTH_SHORT).show();
-                }
-            }
 
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-
-            }
-        });
-    }
 
 
     private void initializeViews(){
@@ -216,13 +182,26 @@ public class HomeActivity extends AppCompatActivity implements MySearchAdapter.O
             updateUserStatus(true);
             //Count total unseen friend requests received by the current user and set it in 'requests' tab
             getTotalUnSeenFriendRequest();
-            //To generate firebase cloud messaging token
-            generateFCMToken();
+            //This is useful when we start our app by clicking the push notification.
+            extractDataFromIntent();
         }
     }
 
 
+    private void extractDataFromIntent(){
+        Intent notificationIntent = getIntent();
+        if (notificationIntent != null){
+            String notificationSenderId = notificationIntent.getStringExtra("senderUid");
+            if (notificationSenderId != null){
+                //notificationSenderId != null only when this activity is open by clicking on notification.
+                //This will not work, when we normaly launch HomeActivity
+                viewPager.setCurrentItem(3);//select request fragment
+            }
+        }
+    }
 
+
+/*
     private void generateFCMToken(){
         FirebaseInstanceId.getInstance().getInstanceId()
                 .addOnCompleteListener(new OnCompleteListener<InstanceIdResult>() {
@@ -239,13 +218,13 @@ public class HomeActivity extends AppCompatActivity implements MySearchAdapter.O
     private void saveFCMTokenOnServer(String token){
         if (notificationRootDatabaseRef != null) {
             Map<String, Object> map = new HashMap<>();
-            map.put(currentUserId+"/device_token", token);
-            Log.d("token",token);
+            map.put(currentUserId + "/device_token", token);
+            Log.d("token", token);
             notificationRootDatabaseRef.updateChildren(map);
         }
-
-
     }
+
+    */
 
 
 

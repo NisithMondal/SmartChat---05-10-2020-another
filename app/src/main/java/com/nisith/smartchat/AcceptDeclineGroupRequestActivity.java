@@ -26,6 +26,7 @@ import com.nisith.smartchat.Model.Friend;
 import com.nisith.smartchat.Model.FriendRequest;
 import com.nisith.smartchat.Model.GroupProfile;
 import com.nisith.smartchat.Model.UserProfile;
+import com.nisith.smartchat.Notification.MyNotification;
 import com.squareup.picasso.Picasso;
 
 import java.util.HashMap;
@@ -42,7 +43,7 @@ public class AcceptDeclineGroupRequestActivity extends AppCompatActivity {
     private DatabaseReference rootDatabaseRef, friendUserDatabaseRef, friendsDatabaseRef, friendRequestDatabaseRef, currentGroupDatabaseRef, groupFriendsDatabaseRef;
     private ValueEventListener valueEventListener;
     private String currentUserId, friendUid, requestSenderUid, requestReceiverUid, groupKey;
-    private String groupName, friendName, userProfileImageUrl;
+    private String groupName, friendName, userProfileImageUrl, currentUserName, currentUserImageUrl;
 
 
 
@@ -77,6 +78,7 @@ public class AcceptDeclineGroupRequestActivity extends AppCompatActivity {
             requestSenderUid = FirebaseAuth.getInstance().getCurrentUser().getUid(); //means Current User Id
             currentUserId = requestSenderUid;
             requestReceiverUid = friendUid; //means Friend User Id
+            getCurrentUserInfo();
         }
         joinGroupButton.setOnClickListener(new MyButtonClickListener());
         rejectGroupButton.setOnClickListener(new MyButtonClickListener());
@@ -96,6 +98,27 @@ public class AcceptDeclineGroupRequestActivity extends AppCompatActivity {
         displayMessageTextView = findViewById(R.id.display_message_text_view);
     }
 
+
+
+    private void getCurrentUserInfo(){
+        rootDatabaseRef.child("users").child(currentUserId).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists()){
+                    UserProfile userProfile = snapshot.getValue(UserProfile.class);
+                    if (userProfile != null){
+                        currentUserName = userProfile.getUserName();
+                        currentUserImageUrl = userProfile.getProfileImage();
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+    }
 
 
 
@@ -272,6 +295,8 @@ public class AcceptDeclineGroupRequestActivity extends AppCompatActivity {
                                 rejectGroupButton.setVisibility(View.GONE);
                                 friendNameTextView.setVisibility(View.VISIBLE);
                                 friendProfileImageView.setVisibility(View.VISIBLE);
+                                //show notification
+                                acceptFriendRequestNotification();
                             }
                         }
                     });
@@ -279,6 +304,14 @@ public class AcceptDeclineGroupRequestActivity extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    private void acceptFriendRequestNotification() {
+        //when current user accept his/her friend request, then send notification to that friend that current user accept his/her friend request.
+        String title = "Join Group";
+        String body = currentUserName+" join this group: "+groupName;
+        MyNotification myNotification = new MyNotification(getApplicationContext());
+        myNotification.send(title, body, requestReceiverUid, null, currentUserImageUrl);
     }
 
     private void cancelGroupRequest(){

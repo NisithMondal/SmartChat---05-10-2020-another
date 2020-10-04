@@ -26,9 +26,8 @@ public class Constant {
     public static final String SEARCH_FRIENDS_FOR_GROUP_FRIENDSHIP = "search_friend_for_group_friendship";
     public static final String SEARCH_FRIENDS_TYPE = "search_friends_type";
     public static final String FRIENDS_TYPE = "friends_type";
-
-
-
-
-
+    //Notification
+    public static final String NOTIFICATION_CLICK_ACTION = "notification_click_action";
+    public static final String ACTION_REQUEST = "action_for_request";
+    public static final String ALL_NOTIFICATION = "all_notification";
 }

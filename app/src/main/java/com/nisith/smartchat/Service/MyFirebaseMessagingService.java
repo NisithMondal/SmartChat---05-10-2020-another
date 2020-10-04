@@ -26,6 +26,8 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
+import com.nisith.smartchat.Constant;
+import com.nisith.smartchat.HomeActivity;
 import com.nisith.smartchat.R;
 import com.nisith.smartchat.TestActivity;
 import com.squareup.picasso.Picasso;
@@ -62,9 +64,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
        final String body = remoteMessage.getNotification().getBody();
        final Uri imageUrl = remoteMessage.getNotification().getImageUrl();
        final String senderUid = remoteMessage.getData().get("senderUid");
-        Log.d("url","before url "+imageUrl);
        if (imageUrl != null && !TextUtils.isEmpty(imageUrl.toString())){
-           Log.d("url","image url is not null into into");
            //Load image from that url in background
            new Handler(Looper.getMainLooper())
                    .post(new Runnable() {
@@ -74,8 +74,6 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                                    .into(new Target() {
                                        @Override
                                        public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
-                                           Log.d("url","Bitmap "+bitmap);
-                                           Log.d("url","url "+imageUrl);
                                            //Image is available in bitmap format
                                            showNotification(senderUid, title, body, bitmap);
                                        }
@@ -94,7 +92,6 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                    });
        }else {
            //imageUrl is null
-           Log.d("url","image url is null");
            showNotification(senderUid, title, body, null);
        }
 
@@ -107,21 +104,18 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
             NotificationManager notificationManager = getSystemService(NotificationManager.class);
             notificationManager.createNotificationChannel(notificationChannel);
         }
-        Intent intent = new Intent(getApplicationContext(), TestActivity.class);
+        Intent intent = new Intent(getApplicationContext(), HomeActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        intent.putExtra(Constant.NOTIFICATION_CLICK_ACTION, Constant.ACTION_REQUEST);
         intent.putExtra("senderUid", senderUid);
         PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(),100,intent,PendingIntent.FLAG_ONE_SHOT);
-
-        Bitmap bitmap = BitmapFactory.decodeResource(getResources(),R.drawable.ic_down_arrow);
-// mImageView.setImageBitmap(mIcon);
-        Log.d("bitmap",""+largeIcon);
         NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(),channelId)
                 .setAutoCancel(true)
                 .setContentTitle(title)
                 .setContentText(body)
                 .setDefaults(Notification.DEFAULT_ALL)
-                .setColor(Color.BLUE)
-                .setSmallIcon(R.drawable.ic_emojy)
+                .setColor(Color.BLACK)
+                .setSmallIcon(R.drawable.ic_person)
                 .setLargeIcon(largeIcon)
                 .setContentIntent(pendingIntent);
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(getApplicationContext());
