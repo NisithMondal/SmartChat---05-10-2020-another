@@ -70,7 +70,7 @@
                 android:paddingStart="4dp"
                 android:paddingTop="10dp"
                 android:paddingBottom="5dp"
-                android:drawableStart="@drawable/ic_about_icon"
+                android:drawableStart="@drawable/ic_user_status_icon"
                 android:drawablePadding="5dp"
                 />
 
@@ -84,7 +84,7 @@
                 android:layout_marginTop="0dp"
                 android:textStyle="normal"
                 android:textColor="#4B4E4B"
-                android:paddingStart="36dp"
+                android:paddingStart="37dp"
                 android:paddingEnd="15dp"
                 />
 

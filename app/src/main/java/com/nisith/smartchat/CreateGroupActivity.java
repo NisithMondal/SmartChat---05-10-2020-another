@@ -67,6 +67,14 @@ public class CreateGroupActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_create_group);
         initializeViews();
+        toolbarTextView.setText("Create Group");
+        appToolbar.setNavigationIcon(R.drawable.ic_back_arrow_icon);
+        appToolbar.setNavigationOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                finish();
+            }
+        });
         progressBar.setVisibility(View.GONE);
         groupProfileImageView.setOnClickListener(new MyClickListener());
         createGroupButton.setOnClickListener(new MyClickListener());

@@ -39,6 +39,8 @@ dependencies {
     //to create image thumbnail
     implementation 'id.zelory:compressor:2.1.0'
 
+    implementation 'com.google.firebase:firebase-messaging:20.3.0'
+    implementation 'com.google.firebase:firebase-analytics:17.5.0'
     implementation 'com.google.firebase:firebase-auth:19.3.2'
     implementation 'com.google.firebase:firebase-database:19.3.1'
     implementation 'com.google.firebase:firebase-storage:19.1.1'
@@ -47,6 +49,10 @@ dependencies {
     implementation 'com.firebaseui:firebase-ui-database:6.3.0'
     //Android Paging Libray
     implementation "android.arch.paging:runtime:1.0.1"
+
+    //retrofit library
+    implementation 'com.squareup.retrofit2:retrofit:2.3.0'
+    implementation 'com.squareup.retrofit2:converter-gson:2.3.0'
 
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'

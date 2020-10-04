@@ -7,6 +7,21 @@
     android:layout_height="match_parent"
     tools:context=".HomeActivity">
 
+    <Button
+        android:id="@+id/notification_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="20dp"
+        android:text="Send Notification"
+        android:textAllCaps="false"
+        android:textSize="18sp"
+        android:background="@drawable/button_background_shape3"
+        android:textColor="@android:color/white"
+        android:padding="15dp"
+        />
+
     <include
         android:id="@+id/app_toolbar"
         layout="@layout/app_toolbar"

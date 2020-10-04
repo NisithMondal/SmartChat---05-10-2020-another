@@ -1,8 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
-<shape xmlns:android="http://schemas.android.com/apk/res/android">
-    <solid
-        android:color="#7B1FA2"/>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <corners
-        android:radius="8dp"/>
-</shape>
+    <item
+        android:state_enabled="false"
+        >
+        <shape>
+            <solid
+                android:color="#6F7071"/>
+            <corners
+                android:radius="6dp"/>
+        </shape>
+    </item>
+
+    <item
+        android:state_pressed="false"
+        >
+        <shape>
+            <solid
+                android:color="#7B1FA2"/>
+
+            <corners
+                android:radius="8dp"/>
+        </shape>
+    </item>
+
+    <item
+        android:state_pressed="true"
+        >
+        <shape>
+            <solid
+                android:color="#9250AE"/>
+
+            <corners
+                android:radius="8dp"/>
+        </shape>
+    </item>
+</selector>

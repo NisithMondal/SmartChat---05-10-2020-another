@@ -13,18 +13,20 @@ import androidx.viewpager.widget.ViewPager;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.firebase.ui.database.FirebaseRecyclerOptions;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.android.material.tabs.TabLayout;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -34,23 +36,29 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.firebase.iid.InstanceIdResult;
 import com.nisith.smartchat.Adapters.MyPagerAdapter;
 import com.nisith.smartchat.Adapters.MySearchAdapter;
 import com.nisith.smartchat.DialogBox.FriendImageClickDialog;
-import com.nisith.smartchat.Fragments.ChatFragment;
-import com.nisith.smartchat.Fragments.FriendsFragment;
-import com.nisith.smartchat.Fragments.GroupsFragment;
 import com.nisith.smartchat.Model.Friend;
 import com.nisith.smartchat.Model.FriendRequest;
 import com.nisith.smartchat.Model.UserStatus;
+import com.nisith.smartchat.Notification.Model.Notification;
+import com.nisith.smartchat.Notification.Model.NotificationData;
+import com.nisith.smartchat.Notification.RetrofitServerRequest;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public class HomeActivity extends AppCompatActivity implements MySearchAdapter.OnSearchItemsClickListener {
 
+    //////////////////////
+    private Button sendNotificationButton;
+    ///////////////////
     private Toolbar appToolbar;
     private TextView toolbarTextView;
     private TabLayout tabLayout;
@@ -63,7 +71,8 @@ public class HomeActivity extends AppCompatActivity implements MySearchAdapter.O
     //Firebase
     private FirebaseAuth firebaseAuth;
     private FirebaseUser currentUser;
-    private DatabaseReference friendRequestRootDatabaseRef, friendsRootDatabaseRef;
+    private String currentUserId;
+    private DatabaseReference friendRequestRootDatabaseRef, friendsRootDatabaseRef, notificationRootDatabaseRef;
     private ValueEventListener unseenFriendRequestValueEventListener;
     private View badgeViewForChats, badgeViewForRequests;
     private TextView badgeHeadingTextViewForChats, badgeItemsTextViewForChats;
@@ -115,6 +124,40 @@ public class HomeActivity extends AppCompatActivity implements MySearchAdapter.O
 
             }
         });
+
+        /////////////////////////////////////
+        sendNotificationButton = findViewById(R.id.notification_button);
+        sendNotificationButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (currentUserId != null) {
+                    sendNotification("Friend Request", "Nisith Mondal sent you friend request", currentUserId, null);
+                }
+            }
+        });
+    }
+
+    private void sendNotification(final String title, final String body, String senderUid, final String clickAction) {
+        notificationRootDatabaseRef.child(senderUid).child("device_token").addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists()){
+                    String receiverDeviceToken = snapshot.getValue().toString();
+                    Notification notification = new Notification(title, body, clickAction,
+                            "https://firebasestorage.googleapis.com/v0/b/smart-chat-faf2a.appspot.com/o/all_user_picture%2Fusers_profile_image%2FTMHY624KhgVwJS3rGC5Kb7sGr1n2.jpg?alt=media&token=09dfdc68-8288-4030-9b0e-c864d6591ba1");
+                    NotificationData data = new NotificationData(currentUserId);
+                    RetrofitServerRequest serverRequest = new RetrofitServerRequest(getApplicationContext());
+                    serverRequest.sendNotification(receiverDeviceToken, notification, data);
+                }else {
+                    Toast.makeText(HomeActivity.this, "Something went wrong", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
     }
 
 
@@ -144,10 +187,9 @@ public class HomeActivity extends AppCompatActivity implements MySearchAdapter.O
 
     private FirebaseRecyclerOptions<Friend> getFirebaseDefaultOptions(){
         Query query = friendsRootDatabaseRef.child(currentUser.getUid());
-        FirebaseRecyclerOptions<Friend> options = new FirebaseRecyclerOptions.Builder<Friend>()
+        return new FirebaseRecyclerOptions.Builder<Friend>()
                 .setQuery(query, Friend.class)
                 .build();
-        return options;
     }
 
 
@@ -157,11 +199,15 @@ public class HomeActivity extends AppCompatActivity implements MySearchAdapter.O
     protected void onStart() {
         super.onStart();
         if (currentUser == null){
+            //Current user is not register yet
             openLoginActivity();
             finish();
         }else {
+            //Current user is already login
             friendRequestRootDatabaseRef = FirebaseDatabase.getInstance().getReference().child("friend_requests");
             friendsRootDatabaseRef = FirebaseDatabase.getInstance().getReference().child("friends");
+            notificationRootDatabaseRef = FirebaseDatabase.getInstance().getReference().child("notification");
+            currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
             if (searchAdapter == null) {
                 //This is only true for first time
                 setupSearchRecyclerViewWithAdapter();
@@ -170,8 +216,38 @@ public class HomeActivity extends AppCompatActivity implements MySearchAdapter.O
             updateUserStatus(true);
             //Count total unseen friend requests received by the current user and set it in 'requests' tab
             getTotalUnSeenFriendRequest();
+            //To generate firebase cloud messaging token
+            generateFCMToken();
         }
     }
+
+
+
+    private void generateFCMToken(){
+        FirebaseInstanceId.getInstance().getInstanceId()
+                .addOnCompleteListener(new OnCompleteListener<InstanceIdResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<InstanceIdResult> task) {
+                        if (task.isSuccessful()){
+                            String token = Objects.requireNonNull(task.getResult()).getToken();
+                            saveFCMTokenOnServer(token);
+                        }
+                    }
+                });
+    }
+
+    private void saveFCMTokenOnServer(String token){
+        if (notificationRootDatabaseRef != null) {
+            Map<String, Object> map = new HashMap<>();
+            map.put(currentUserId+"/device_token", token);
+            Log.d("token",token);
+            notificationRootDatabaseRef.updateChildren(map);
+        }
+
+
+    }
+
+
 
     @Override
     protected void onPause() {
