@@ -25,6 +25,8 @@ import com.nisith.smartchat.Model.UserProfile;
 import com.nisith.smartchat.Notification.MyNotification;
 import com.squareup.picasso.Picasso;
 
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -341,6 +343,15 @@ public class FriendsProfileActivityForGroup extends AppCompatActivity {
         }
     }
 
+
+    private String getCurrentDateAndTime(){
+        Calendar calendar = Calendar.getInstance();
+        SimpleDateFormat date = new SimpleDateFormat("MMM dd, yyyy");
+        String currentDate = date.format(calendar.getTime());
+        SimpleDateFormat time = new SimpleDateFormat("hh:mm a");
+        String currentTime = time.format(calendar.getTime());
+        return currentDate + " " + currentTime;
+    }
 
     private void sendGroupRequestNotification() {
         String title = "Group Request";

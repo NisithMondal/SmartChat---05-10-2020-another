@@ -314,7 +314,6 @@ public class ChatActivity extends AppCompatActivity {
         int index = 1;
         for (ChildEventListenerModel model : removeListenerFromChatMessagesPaginationList){
             messagesDatabaseRef.child(currentUser.getUid()).child(model.getKey()).removeEventListener(model.getChildEventListener());
-            Log.d("MNBVCX","Remove child event listener index = "+index);
             index++;
         }
         removeListenerFromChatMessagesPaginationList.clear();

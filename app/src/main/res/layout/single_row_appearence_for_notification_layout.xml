@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    app:cardElevation="4dp"
+    app:cardCornerRadius="8dp"
+    app:cardBackgroundColor="#ffffff"
+    android:layout_margin="4dp"
+    android:id="@+id/root_view">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <de.hdodenhof.circleimageview.CircleImageView
+            android:id="@+id/profile_image_view"
+            android:layout_width="70dp"
+            android:layout_height="70dp"
+            android:layout_centerVertical="true"
+            android:layout_margin="15dp"
+            android:src="@drawable/default_user_icon"
+            />
+
+        <TextView
+            android:id="@+id/title_text_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_toEndOf="@+id/profile_image_view"
+            android:layout_marginTop="23dp"
+            android:text="Title"
+            android:textColor="#000000"
+            android:textSize="16sp"
+            android:layout_marginEnd="10dp"
+            android:layout_toStartOf="@+id/delete_image_view"
+            android:textStyle="bold"
+            android:maxLines="1"
+            />
+
+        <ImageView
+            android:id="@+id/delete_image_view"
+            android:layout_width="35dp"
+            android:layout_height="30dp"
+            android:src="@drawable/ic_delete_icon"
+            android:layout_alignParentEnd="true"
+            android:layout_marginTop="20dp"
+            android:layout_marginEnd="10dp"
+            />
+
+
+        <TextView
+            android:id="@+id/body_text_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_toEndOf="@+id/profile_image_view"
+            android:layout_below="@+id/title_text_view"
+            android:layout_marginTop="0dp"
+            android:textColor="#454343"
+            android:text="Body"
+            android:textSize="16sp"
+            android:layout_toStartOf="@+id/delete_image_view"
+            android:layout_marginEnd="10dp"
+            android:maxLines="4"
+
+            android:textStyle="normal"
+            />
+
+        <TextView
+            android:id="@+id/date_text_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/body_text_view"
+            android:layout_toEndOf="@+id/profile_image_view"
+            android:layout_toStartOf="@+id/delete_image_view"
+            android:layout_marginBottom="5dp"
+            android:text="August 12,2020 12:37 PM"
+            />
+
+
+    </RelativeLayout>
+
+</androidx.cardview.widget.CardView>

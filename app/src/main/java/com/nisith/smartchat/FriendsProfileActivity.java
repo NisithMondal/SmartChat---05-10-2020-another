@@ -28,6 +28,8 @@ import com.nisith.smartchat.Model.UserProfile;
 import com.nisith.smartchat.Notification.MyNotification;
 import com.squareup.picasso.Picasso;
 
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -297,7 +299,7 @@ import java.util.Map;
          final String title = "Friend Request";
          final String body = currentUserName+" send you friend request.";
          String key = rootDatabaseRef.child("notification").child(currentUserId).child(Constant.ALL_NOTIFICATION).push().getKey();
-         UserNotification userNotification = new UserNotification(title, body, System.currentTimeMillis(),"date_time"
+         UserNotification userNotification = new UserNotification(title, body, System.currentTimeMillis(), getCurrentDateAndTime()
                  ,currentUserImageUrl, currentUserId, "blank");
         Map<String, Object> map = new HashMap<>();
         map.put(requestReceiverUid + "/" + Constant.ALL_NOTIFICATION + "/" +key , userNotification);
@@ -311,6 +313,15 @@ import java.util.Map;
                 });
      }
 
+
+     private String getCurrentDateAndTime(){
+         Calendar calendar = Calendar.getInstance();
+         SimpleDateFormat date = new SimpleDateFormat("MMM dd, yyyy");
+         String currentDate = date.format(calendar.getTime());
+         SimpleDateFormat time = new SimpleDateFormat("hh:mm a");
+         String currentTime = time.format(calendar.getTime());
+         return currentDate + " " + currentTime;
+     }
 
      private void sendFriendRequestNotification(String title, String body) {
          MyNotification myNotification = new MyNotification(getApplicationContext());
@@ -345,7 +356,7 @@ import java.util.Map;
          final String title = "Accept Request";
          final String body = currentUserName+" accept your friend request.";
          String key = rootDatabaseRef.child("notification").child(currentUserId).child(Constant.ALL_NOTIFICATION).push().getKey();
-         UserNotification userNotification = new UserNotification(title, body, System.currentTimeMillis(),"date_time"
+         UserNotification userNotification = new UserNotification(title, body, System.currentTimeMillis(), getCurrentDateAndTime()
                  ,currentUserImageUrl, currentUserId, "blank");
          Map<String, Object> map = new HashMap<>();
          map.put(friendUid + "/" + Constant.ALL_NOTIFICATION + "/" +key , userNotification);
